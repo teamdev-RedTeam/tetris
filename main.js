@@ -43,6 +43,9 @@ canvas.height = SCREEN_H;
 // miniCanvas.width = MINISCREEN_W;
 // miniCanvas.height = MINISCREEN_H;
 
+// 消したライン数
+let lines;
+
 let tetro_x = 1;
 let tetro_y = 0;
 
@@ -184,7 +187,49 @@ function checkMove() {
 
 // テトロミノを回転させる
 function rotateTetro() {
+    let newTetro = [];
 
+    for (let y = 0; y < TETRO_SIZE; y++) {
+        newTetro[y] = [];
+        for (let x = 0; x < TETRO_SIZE; x++) {
+            // tetroが定義されてないので, ひとまずTETRO_PATTERN[0]を回転
+            // 実際: newTetro[y][x] = tetro[TETRO_SIZE-x-1][y]
+            newTetro[y][x] = TETRO_PATTERN[0][TETRO_SIZE-x-1][y];
+        }
+    }    
+    return newTetro;
+}
+
+
+//横にそろったら消す
+function checkLine(){
+    // score用に消した行数をカウント
+    let linec = 0;
+    
+    // フィールド外枠を除外
+    for(let y = 1; y < FILED_ROW-1; y++) {
+        let flag = true;
+        for(let x = 1; x < FILED_COL-1; x++) {
+            if(!field[y][x]) {
+                flag = false;
+                break;
+            }
+        }
+        if (flag){
+            linec++;
+
+            for(let ny = y; ny > 1; ny--) {
+                for(let nx = 1; nx < FILED_COL-1; nx++) {
+                    field[ny][nx] = field[ny-1][nx];
+                }
+            }
+        }
+    }
+    
+    // （修正必須！！）スコア用の処理
+    if(linec) {
+        lines += linec;
+    }
 }
 
 // 下矢印を押したときと同じ処理
@@ -214,8 +259,8 @@ function drawTetro() {
                 tetro_y++;
                 break;
             case "ArrowUp":
-                // let newTetoro = rotateTetro();
-                // if (checkMove()) TETRO_PATTERN[0] = newTetoro;
+                let newTetro = rotateTetro();
+                if (checkMove(0, 0, newTetro)) TETRO_PATTERN[0] = newTetro;
                 tetro_y--;
                 break;
             default:
