@@ -51,7 +51,6 @@ let id;
 // レベルが上がるごとに速くする
 let dropSpeed = 600;
 
-
 const TETRO_COLORS = [
     [102, 204, 255],    //0水色
     [255, 153, 34],     //1オレンジ
@@ -66,10 +65,9 @@ const TETRO_COLORS = [
 ];
 
 // 消したライン数
-let lines;
-
-let tetro_x = 1;
-let tetro_y = 0;
+let lines = 0;
+// スコア
+let score = 0;
 
 // 7種類のテトロミノ
 const TETRO_PATTERN = [
@@ -82,24 +80,24 @@ const TETRO_PATTERN = [
     ],
 
     [   // L型
+        [ 0, 0, 0, 0 ],
         [ 0, 1, 0, 0 ],
         [ 0, 1, 0, 0 ],
-        [ 0, 1, 1, 0 ],
-        [ 0, 0, 0, 0 ]
+        [ 0, 1, 1, 0 ]
     ],
 
     [   // J型
+        [ 0, 0, 0, 0 ],
         [ 0, 0, 1, 0 ],
         [ 0, 0, 1, 0 ],
-        [ 0, 1, 1, 0 ],
-        [ 0, 0, 0, 0 ]
+        [ 0, 1, 1, 0 ]
     ],
 
     [   // T型
+        [ 0, 0, 0, 0 ],
         [ 0, 1, 0, 0 ],
         [ 0, 1, 1, 0 ],
-        [ 0, 1, 0, 0 ],
-        [ 0, 0, 0, 0 ]
+        [ 0, 1, 0, 0 ]
     ],
 
     [   // O型
@@ -141,17 +139,6 @@ let nextTetro = TETRO_PATTERN[nextTetroType];
 let field = [];
 let miniField = [];
 
-function initializeField() {
-    for (let y = 0; y < FILED_ROW; y++) {
-        field[y] = [];
-        for (let x = 0; x < FILED_COL; x++) {
-            if (y == 21 || x == 0 || x == 11) field[y][x] = 1;
-            else if (y == 0 && (x >= 1 && x <= 10)) field[y][x] = 2;
-            else field[y][x] = 0;
-        }
-    }    
-}
-
 // ワンブロックを描画する
 function drawBlock(context, x, y, color, opacity, strokeColor = 9) {
     let px = x * BLOCK_SIZE;
@@ -169,6 +156,7 @@ function initializeField() {
         for (let x = 0; x < FIELD_COL; x++) {
             if (y == 21 || x == 0 || x == 11) field[y][x] = 7;
             else if (y == 0 && (x >= 1 && x <= 10)) field[y][x] = 8;
+            // フィールド内
             else field[y][x] = 9;
         }
     }
@@ -182,7 +170,7 @@ function drawField() {
         for (let x = 0; x < FIELD_COL; x++) {
             if (field[y][x] == 7) drawBlock(ctx, x, y, 7, 0.7);
             else if (field[y][x] == 8) drawBlock(ctx, x, y, 8, 0);
-            else drawBlock(ctx, x, y, 9, 0.5, 8);
+            else drawBlock(ctx, x, y, field[y][x], 0.5, 8);
         }
     }
 }
@@ -210,15 +198,19 @@ function drawMiniField() {
 }
 
 // 当たり判定を行う
-function checkMove(mx, my) {
+function checkMove(mx, my, newTetro) {
+
+    if(newTetro == undefined) newTetro = tetro;
+
     for(let y = 0; y < TETRO_SIZE; y++){
         for(let x = 0; x < TETRO_SIZE; x++){
-            if(tetro[y][x]){
+            if(newTetro[y][x]){
                 let nx = tetro_x + mx + x; // 2
                 let ny = tetro_y + my + y; // 0
-                if(ny < 0 || nx < 0
-                || ny >= FILED_ROW || nx >= FILED_COL
-                || field[ny][nx] ) return false;
+                if(ny < 1 || nx < 1
+                || ny >= FIELD_ROW - 1 || nx >= FIELD_COL - 1
+                || field[ny][nx] != 9)
+                return false;
             }
         }
     }
@@ -232,14 +224,11 @@ function rotateTetro() {
     for (let y = 0; y < TETRO_SIZE; y++) {
         newTetro[y] = [];
         for (let x = 0; x < TETRO_SIZE; x++) {
-            // tetroが定義されてないので, ひとまずTETRO_PATTERN[0]を回転
-            // 実際: newTetro[y][x] = tetro[TETRO_SIZE-x-1][y]
-            newTetro[y][x] = TETRO_PATTERN[0][TETRO_SIZE-x-1][y];
+            newTetro[y][x] = tetro[TETRO_SIZE-x-1][y];
         }
-    }    
+    }
     return newTetro;
 }
-
 
 //横にそろったら消す
 function checkLine(){
@@ -247,10 +236,10 @@ function checkLine(){
     let linec = 0;
     
     // フィールド外枠を除外
-    for(let y = 1; y < FILED_ROW-1; y++) {
+    for(let y = 1; y < FIELD_ROW-1; y++) {
         let flag = true;
-        for(let x = 1; x < FILED_COL-1; x++) {
-            if(!field[y][x]) {
+        for(let x = 1; x < FIELD_COL-1; x++) {
+            if(field[y][x] == 9) {
                 flag = false;
                 break;
             }
@@ -259,16 +248,21 @@ function checkLine(){
             linec++;
 
             for(let ny = y; ny > 1; ny--) {
-                for(let nx = 1; nx < FILED_COL-1; nx++) {
+                for(let nx = 1; nx < FIELD_COL-1; nx++) {
                     field[ny][nx] = field[ny-1][nx];
                 }
             }
         }
     }
     
-    // （修正必須！！）スコア用の処理
+    // スコア用の処理
     if(linec) {
         lines += linec;
+        score += 100 * (2**(linec-1));
+        
+        // スコアと消したライン数を表示
+        document.getElementById("lines").innerHTML = lines;
+        document.getElementById("socre").innerHTML = score;
     }
 }
 
@@ -276,34 +270,36 @@ function checkLine(){
 function fixTetro() {
     for (let y = 0; y < TETRO_SIZE; y++) {
         for (let x = 0; x < TETRO_SIZE; x++) {
-            if (tetro[y][x]) {
-                field[tetro_y + y][tetro_x + x] = tetroType;
-            }
+            if (tetro[y][x]) field[tetro_y + y][tetro_x + x] = tetroType;
         }
     }    
 }
 
 // 一定間隔ごとにテトロミノを落とす
 function dropTetro() {
-    // checkMove()がtrueのとき  
-    tetro_y++;
-    // falseのとき
-    // fixTetro();
-    // tetroType = nextTetroType;
-    // tetro = TETRO_PATTERN[tetroType];
-    // nextTetroType = generateRandomInt();
-    // START_X = 0;
-    // START_Y = 0;
+    if (checkMove(0, 1)) tetro_y++;
+    else {
+        fixTetro();
+        checkLine();
+        tetroType = nextTetroType;
+        tetro = TETRO_PATTERN[tetroType];
+        nextTetroType = generateRandomInt();
+        nextTetro = TETRO_PATTERN[nextTetroType];
+        tetro_x = START_X;
+        tetro_y = START_Y;
+    }
 
     drawField();
     drawTetro();
+    drawMiniField();
+    drawTetroMini();
 }
 
 function drawTetro() {
     for (let y = 0; y < TETRO_SIZE; y++) {
         for (let x = 0; x < TETRO_SIZE; x++) {
             if (tetro[y][x]) {
-                drawBlock(tetro_x + x, tetro_y + y, "red", 0.2);
+                drawBlock(ctx, tetro_x + x, tetro_y + y, tetroType, 0.2);
             }
         }
     }
@@ -316,25 +312,6 @@ function drawTetroMini() {
         }
     }
 }
-
-document.onkeydown = (e) => {
-    switch(e.key) {
-        case "ArrowLeft":
-            tetro_x--;
-            break;
-        case "ArrowRight":
-            tetro_x++;
-            break;
-        case "ArrowDown":
-            tetro_y++;
-            break;
-        case "ArrowUp":
-            let newTetro = rotateTetro();
-            if (checkMove(0, 0, newTetro)) TETRO_PATTERN[0] = newTetro;
-            tetro_y--;
-            break;
-        default:
-            return;
 
 function switchPages(page1, page2) {
     displayNone(page1);
@@ -350,18 +327,18 @@ function switchPages(page1, page2) {
             if(checkMove(1, 0)) tetro_x++;
             break;
         case "ArrowDown":
-            if(checkMove(0, 1)) tetro_y++;
+            while(checkMove(0, 1)) tetro_y++;
             break;
         case "ArrowUp":
-            let newTetoro = rotateTetro();
-            if (checkMove()) TETRO_PATTERN[0] = newTetoro;
-            if(checkMove(0, -1)) tetro_y--;
+            let newTetro = rotateTetro();
+            if (checkMove(0, 0, newTetro)) tetro = newTetro;
             break;
         default:
             return;
-        }  
-        drawField();
-        drawTetro();
+        }
+
+    drawField();
+    drawTetro();
 }
 
 // スタートボタン
