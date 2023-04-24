@@ -31,15 +31,45 @@ body {
 .play-button {
     background-color: rgb(184, 154, 80);
     border: none;
-    /* color: white; */
     padding: 10px 20px;
-    /* text-align: center; */
     text-decoration: none;
     display: inline-block;
     font-size: 15px;
     cursor: pointer;
   }
 
-  .pause-button:hover {
-    opacity: 0.7;
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+  }
+  
+  .modal-content {
+    background-color: black;
+    color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border: 4mm ridge #888;
+    width: 60%;
+    max-width: 400px;
+    text-align: center;
+  }
+  
+  #play-again-button {
+    background-color: #ffc107;
+    border: none;
+    color: white;
+    padding: 10px 30px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 20px;
+    margin: 4px 2px;
+    cursor: pointer;
   }
