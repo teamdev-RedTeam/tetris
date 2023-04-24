@@ -66,7 +66,9 @@ const TETRO_COLORS = [
 ];
 
 // 消したライン数
-let lines;
+let lines = 0;
+// スコア
+let score = 0;
 
 // 7種類のテトロミノ
 const TETRO_PATTERN = [
@@ -197,10 +199,13 @@ function drawMiniField() {
 }
 
 // 当たり判定を行う
-function checkMove(mx, my) {
+function checkMove(mx, my, newTetro) {
+
+    if(newTetro == undefined) newTetro = tetro;
+
     for(let y = 0; y < TETRO_SIZE; y++){
         for(let x = 0; x < TETRO_SIZE; x++){
-            if(tetro[y][x]){
+            if(newTetro[y][x]){
                 let nx = tetro_x + mx + x; // 2
                 let ny = tetro_y + my + y; // 0
                 if(ny < 1 || nx < 1
@@ -235,7 +240,7 @@ function checkLine(){
     for(let y = 1; y < FIELD_ROW-1; y++) {
         let flag = true;
         for(let x = 1; x < FIELD_COL-1; x++) {
-            if(!field[y][x]) {
+            if(field[y][x] == 9) {
                 flag = false;
                 break;
             }
@@ -251,9 +256,13 @@ function checkLine(){
         }
     }
     
-    // （修正必須！！）スコア用の処理
+    // スコア用の処理
     if(linec) {
         lines += linec;
+        score += 100 * (2**(linec-1));
+        // スコアと消したライン数を表示
+        document.getElementById("lines").innerHTML = lines;
+        document.getElementById("score").innerHTML = score;
     }
 }
 
@@ -271,6 +280,7 @@ function dropTetro() {
     if (checkMove(0, 1)) tetro_y++;
     else {
         fixTetro();
+        checkLine();
         tetroType = nextTetroType;
         tetro = TETRO_PATTERN[tetroType];
         nextTetroType = generateRandomInt();
@@ -334,9 +344,8 @@ function switchPages(page1, page2) {
             while(checkMove(0, 1)) tetro_y++;
             break;
         case "ArrowUp":
-            let newTetoro = rotateTetro();
-            if (checkMove()) tetro = newTetoro;
-            if(checkMove(0, -1)) tetro_y--;
+            let newTetro = rotateTetro();
+            if (checkMove(0, 0, newTetro)) tetro = newTetro;
             break;
         default:
             return;
