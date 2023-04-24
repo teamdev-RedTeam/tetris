@@ -291,7 +291,9 @@ function dropTetro() {
 
     if (checkGameOver()) {
         clearInterval(id);
-        return;
+        displayGameOverModal();
+        // alert("GAME OVER!!");
+        // return;
     }
     
     drawField();
@@ -331,6 +333,16 @@ function switchPages(page1, page2) {
     displayNone(page1);
     displayBlock(page2);
 }
+
+function displayGameOverModal() {
+    let modal = document.getElementById("game-over-modal");
+    modal.style.display = "block";
+  }
+  
+//   function hideGameOverModal() {
+//     let modal = document.getElementById("game-over-modal");
+//     modal.style.display = "none";
+//   }
 
  document.onkeydown = (e) => {
     switch(e.key) {
@@ -395,4 +407,4 @@ document.getElementById("pauseBtn").addEventListener("click", function(){
             dropTetro();
         }, dropSpeed);
     }
-});  
+});
