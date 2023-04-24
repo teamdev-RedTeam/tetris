@@ -50,6 +50,7 @@ let tetro_y = START_Y;
 let id;
 // レベルが上がるごとに速くする
 let dropSpeed = 600;
+let gameOver = false;
 
 const TETRO_COLORS = [
     [102, 204, 255],    //0水色
@@ -278,6 +279,11 @@ function dropTetro() {
         tetro_y = START_Y;
     }
 
+    if (checkGameOver()) {
+        clearInterval(id);
+        return;
+    }
+    
     drawField();
     drawTetro();
     drawMiniField();
@@ -288,7 +294,7 @@ function drawTetro() {
     for (let y = 0; y < TETRO_SIZE; y++) {
         for (let x = 0; x < TETRO_SIZE; x++) {
             if (tetro[y][x]) {
-                drawBlock(ctx, tetro_x + x, tetro_y + y, tetroType, 0.2);
+                drawBlock(ctx, tetro_x + x, tetro_y + y, tetroType, 0.3);
             }
         }
     }
@@ -300,6 +306,15 @@ function drawTetroMini() {
             if (nextTetro[y][x]) drawBlock(miniCtx, x, y, nextTetroType, 0.3);
         }
     }
+}
+
+// 上のラインに触れているかをチェックする
+function checkGameOver() {
+    let y = 1;
+    for (let x = 1; x < FIELD_COL - 1; x++) {
+        if (field[y][x] != 9) return true;
+    }
+    return false;
 }
 
 function switchPages(page1, page2) {
@@ -371,4 +386,4 @@ document.getElementById("pauseBtn").addEventListener("click", function(){
             dropTetro();
         }, dropSpeed);
     }
-});
+});  
