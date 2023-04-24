@@ -13,35 +13,57 @@ function displayBlock(ele) {
     ele.classList.add("d-block");
 }
 
-function switchPages(page1, page2) {
-    displayNone(page1);
-    displayBlock(page2);
-}
-
+// メインフィールド
 const canvas = document.getElementById("canvas");
-const context = canvas.getContext("2d");
+const ctx = canvas.getContext("2d");
 
-// const miniCanvas = document.getElementById("miniCanvas");
-// const miniContext = miniCanvas.getContext("2d");
+// サブフィールド
+const miniCanvas = document.getElementById("miniCanvas");
+const miniCtx = miniCanvas.getContext("2d");
 
-let dropSpeed = 600;
+const FIELD_COL = 12;
+const FIELD_ROW = 22;
 
-const FILED_COL = 12;
-const FILED_ROW = 22;
+const MINI_F_COL = 4;
+const MINI_F_ROW = 4;
 
-const TETRO_SIZE = 4;
 const BLOCK_SIZE = 30;
+const TETRO_SIZE = 4;
 
-const SCREEN_W = FILED_COL * BLOCK_SIZE; // 360px
-const SCREEN_H = FILED_ROW * BLOCK_SIZE; // 660px
+const SCREEN_W = FIELD_COL * BLOCK_SIZE; // 360px
+const SCREEN_H = FIELD_ROW * BLOCK_SIZE; // 660px
 canvas.width = SCREEN_W;
 canvas.height = SCREEN_H;
-// canvas.style.border = "4px solid black";
 
-// const MINISCREEN_W = TETRO_SIZE * BLOCK_SIZE; // 120px
-// const MINISCREEN_H = TETRO_SIZE * BLOCK_SIZE; // 120px
-// miniCanvas.width = MINISCREEN_W;
-// miniCanvas.height = MINISCREEN_H;
+const MINISCREEN_W = MINI_F_COL * BLOCK_SIZE; // 120px
+const MINISCREEN_H = MINI_F_ROW * BLOCK_SIZE; // 120px
+miniCanvas.width = MINISCREEN_W;
+miniCanvas.height = MINISCREEN_H;
+
+// 中央から出るようにするため
+const START_X = FIELD_COL / 2 - TETRO_SIZE / 2;
+const START_Y = 0;
+
+let tetro_x = START_X;
+let tetro_y = START_Y;
+
+let id;
+// レベルが上がるごとに速くする
+let dropSpeed = 600;
+
+
+const TETRO_COLORS = [
+    [102, 204, 255],    //0水色
+    [255, 153, 34],     //1オレンジ
+    [102, 102, 255],    //2青
+    [204, 85, 204],     //3紫
+    [255, 221, 34],     //4黄色
+    [255, 68, 68],      //5赤
+    [85, 187, 85],      //6緑
+    [184, 154, 80],     //7黄土
+    [125, 118, 119],    //8灰色
+    [0, 0, 0],          //9黒
+];
 
 // 消したライン数
 let lines;
@@ -52,48 +74,49 @@ let tetro_y = 0;
 // 7種類のテトロミノ
 const TETRO_PATTERN = [
     [
+        // I型
         [ 0, 0, 0, 0 ],
         [ 1, 1, 1, 1 ],
         [ 0, 0, 0, 0 ],
         [ 0, 0, 0, 0 ]
     ],
 
-    [
+    [   // L型
         [ 0, 1, 0, 0 ],
         [ 0, 1, 0, 0 ],
         [ 0, 1, 1, 0 ],
         [ 0, 0, 0, 0 ]
     ],
 
-    [
+    [   // J型
         [ 0, 0, 1, 0 ],
         [ 0, 0, 1, 0 ],
         [ 0, 1, 1, 0 ],
         [ 0, 0, 0, 0 ]
     ],
 
-    [
+    [   // T型
         [ 0, 1, 0, 0 ],
         [ 0, 1, 1, 0 ],
         [ 0, 1, 0, 0 ],
         [ 0, 0, 0, 0 ]
     ],
 
-    [
+    [   // O型
         [ 0, 0, 0, 0 ],
         [ 0, 1, 1, 0 ],
         [ 0, 1, 1, 0 ],
         [ 0, 0, 0, 0 ]
     ],
 
-    [
+    [   // Z型
         [ 0, 0, 0, 0 ],
         [ 1, 1, 0, 0 ],
         [ 0, 1, 1, 0 ],
         [ 0, 0, 0, 0 ]
     ],
 
-    [
+    [   // S型
         [ 0, 0, 0, 0 ],
         [ 0, 1, 1, 0 ],
         [ 1, 1, 0, 0 ],
@@ -101,88 +124,83 @@ const TETRO_PATTERN = [
     ]
 ];
 
-// 色はここに登録
-const colorRGB = {
-    "white":  [255, 255, 255],
-    "black":  [0, 0, 0],
-    "yellow": [255, 255, 0],
-    "red":    [255, 0, 0],
-    "blue":   [0, 0, 255],
-    "green":  [0, 255, 0],
-    "oudo":   [184, 154, 80],
-    "gray":   [125, 125, 125],
-    "water":  [170, 202, 222],
+const MIN = 0;
+const MAX = TETRO_PATTERN.length - 1;
+
+function generateRandomInt() {
+    return Math.floor( Math.random() * (MAX + 1 - MIN) ) + MIN;
 }
+
+let tetroType = generateRandomInt();
+let tetro = TETRO_PATTERN[tetroType];
+
+// 次のテトロミノ
+let nextTetroType = generateRandomInt();
+let nextTetro = TETRO_PATTERN[nextTetroType];
 
 let field = [];
 let miniField = [];
 
-function initializeField() {
-    for (let y = 0; y < FILED_ROW; y++) {
-        field[y] = [];
-        for (let x = 0; x < FILED_COL; x++) {
-            if (y == 21 || x == 0 || x == 11) field[y][x] = 1;
-            else if (y == 0 && (x >= 1 && x <= 10)) field[y][x] = 2;
-            else field[y][x] = 0;
-        }
-    }    
-}
-
 // ワンブロックを描画する
-function drawBlock(x, y, color, opacity, strokeColor = "black") {
+function drawBlock(context, x, y, color, opacity, strokeColor = 9) {
     let px = x * BLOCK_SIZE;
     let py = y * BLOCK_SIZE;
 
-    context.fillStyle = `rgb(${colorRGB[color]})`;
+    context.fillStyle = `rgb(${TETRO_COLORS[color]})`;
     context.fillRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
-    context.strokeStyle = `rgb(${colorRGB[strokeColor]}, ${opacity})`;
+    context.strokeStyle = `rgb(${TETRO_COLORS[strokeColor]}, ${opacity})`;
     context.strokeRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
 }
 
-// フィールド全体を描画する
-function drawField() {
-    context.clearRect(0, 0, SCREEN_W, SCREEN_H);
-
-    for (let y = 0; y < FILED_ROW; y++) {
-        for (let x = 0; x < FILED_COL; x++) {
-            if (field[y][x] == 1) drawBlock(x, y, "oudo", 0.7);
-            else if (field[y][x] == 2) drawBlock(x, y, "gray", 0);
-            else drawBlock(x, y, "black", 0.5, "gray");
+function initializeField() {
+    for (let y = 0; y < FIELD_ROW; y++) {
+        field[y] = [];
+        for (let x = 0; x < FIELD_COL; x++) {
+            if (y == 21 || x == 0 || x == 11) field[y][x] = 7;
+            else if (y == 0 && (x >= 1 && x <= 10)) field[y][x] = 8;
+            else field[y][x] = 9;
         }
     }
 }
 
+// フィールド全体を描画する
+function drawField() {
+    ctx.clearRect(0, 0, SCREEN_W, SCREEN_H);
+
+    for (let y = 0; y < FIELD_ROW; y++) {
+        for (let x = 0; x < FIELD_COL; x++) {
+            if (field[y][x] == 7) drawBlock(ctx, x, y, 7, 0.7);
+            else if (field[y][x] == 8) drawBlock(ctx, x, y, 8, 0);
+            else drawBlock(ctx, x, y, 9, 0.5, 8);
+        }
+    }
+}
+
+// ミニフィールドを初期化する
 function initializeMiniField() {
-    for (let y = 0; y < TETRO_SIZE; y++) {
+    for (let y = 0; y < MINI_F_ROW; y++) {
         miniField[y] = [];
-        for (let x = 0; x < TETRO_SIZE; x++) {
-            miniField[y][x] = 3;
+        for (let x = 0; x < MINI_F_COL; x++) {
+            miniField[y][x] = 1;
         }
     }
 }
 
 function drawMiniField() {
-    miniContext.clearRect(0, 0, MINISCREEN_W, MINISCREEN_H);
+    miniCtx.clearRect(0, 0, MINISCREEN_W, MINISCREEN_H);
 
-    for (let y = 0; y < TETRO_SIZE; y++) {
-        for (let x = 0; x < TETRO_SIZE; x++) {
-            if (miniField[y][x] == 3) {
-                console.log(miniField[y][x]);
-                drawBlock(x, y, "water", 0.7, "gray");
+    for (let y = 0; y < MINI_F_ROW; y++) {
+        for (let x = 0; x < MINI_F_COL; x++) {
+            if (miniField[y][x] == 1) {
+                drawBlock(miniCtx, x, y, 7, 0.1);
             }
         }
     }
 }
 
-initializeField();
-drawField();
-// initializeMiniField();
-// drawMiniField();
-drawTetro();
-
 // 当たり判定を行う
 function checkMove() {
-    return true;
+
 }
 
 // テトロミノを回転させる
@@ -232,41 +250,131 @@ function checkLine(){
     }
 }
 
-// 下矢印を押したときと同じ処理
-function dropTetro() {
-
+// それ以上下に行くことができないので固定する
+function fixTetro() {
+    for (let y = 0; y < TETRO_SIZE; y++) {
+        for (let x = 0; x < TETRO_SIZE; x++) {
+            if (tetro[y][x]) {
+                field[tetro_y + y][tetro_x + x] = tetroType;
+            }
+        }
+    }    
 }
 
+// 一定間隔ごとにテトロミノを落とす
+function dropTetro() {
+    // checkMove()がtrueのとき  
+    tetro_y++;
+    // falseのとき
+    // fixTetro();
+    // tetroType = nextTetroType;
+    // tetro = TETRO_PATTERN[tetroType];
+    // nextTetroType = generateRandomInt();
+    // START_X = 0;
+    // START_Y = 0;
+
+    drawField();
+    drawTetro();
+}
 
 function drawTetro() {
     for (let y = 0; y < TETRO_SIZE; y++) {
         for (let x = 0; x < TETRO_SIZE; x++) {
-            if (TETRO_PATTERN[0][y][x]) {
-                drawBlock(tetro_x + x, tetro_y + y, "red", 0.2)
-            }
+            if (tetro[y][x]) drawBlock(ctx, tetro_x + x, tetro_y + y, tetroType, 0.3)
         }
     }
-    
-    document.onkeydown = (e) => {
-        switch(e.key) {
-            case "ArrowLeft":
-                tetro_x--;
-                break;
-            case "ArrowRight":
-                tetro_x++;
-                break;
-            case "ArrowDown":
-                tetro_y++;
-                break;
-            case "ArrowUp":
-                let newTetro = rotateTetro();
-                if (checkMove(0, 0, newTetro)) TETRO_PATTERN[0] = newTetro;
-                tetro_y--;
-                break;
-            default:
-                return;
-        }
-        drawField();
-        drawTetro();
-    };
 }
+
+function drawTetroMini() {
+    for (let y = 0; y < TETRO_SIZE; y++) {
+        for (let x = 0; x < TETRO_SIZE; x++) {
+            if (nextTetro[y][x]) drawBlock(miniCtx, x, y, nextTetroType, 0.3)
+        }
+    }
+}
+
+document.onkeydown = (e) => {
+    switch(e.key) {
+        case "ArrowLeft":
+            tetro_x--;
+            break;
+        case "ArrowRight":
+            tetro_x++;
+            break;
+        case "ArrowDown":
+            tetro_y++;
+            break;
+        case "ArrowUp":
+            let newTetro = rotateTetro();
+            if (checkMove(0, 0, newTetro)) TETRO_PATTERN[0] = newTetro;
+            tetro_y--;
+            break;
+        default:
+            return;
+
+function switchPages(page1, page2) {
+    displayNone(page1);
+    displayBlock(page2);
+}
+
+document.onkeydown = (e) => {
+    switch(e.key) {
+        case "ArrowLeft":
+            tetro_x--;
+            break;
+        case "ArrowRight":
+            tetro_x++;
+            break;
+        case "ArrowDown":
+            tetro_y++;
+            break;
+        case "ArrowUp":
+            break;
+        default:
+            return;
+    }
+    drawField();
+    drawTetro();
+};
+
+// スタートボタン
+document.getElementById("startBtn").addEventListener("click", function(){
+    switchPages(config.initialPage, config.mainPage);
+    initializeField();
+    drawField();
+    drawTetro();
+    initializeMiniField();
+    drawMiniField();
+    drawTetroMini();
+
+    id = setInterval(() => {
+        dropTetro();
+    }, dropSpeed);
+});
+
+//　リセットボタン
+document.getElementById("resetBtn").addEventListener("click", function(){
+    let result = confirm("スタート画面に戻りますか？");
+    
+    if (result) location.reload();
+    else return;
+
+    clearInterval(id);
+});
+
+// 一時停止ボタン
+document.getElementById("pauseBtn").addEventListener("click", function(){
+    let btn = document.getElementById("pauseBtn");
+    const paused = `<i class="fa-solid fa-pause fa-2x"></i>`;
+    const restart = `<i class="fa-solid fa-play fa-2x"></i>`; 
+
+    if (btn.innerHTML == paused) {
+        btn.innerHTML = restart;
+        clearInterval(id);
+    } else {
+        btn.innerHTML = paused;
+        id = setInterval(() => {
+            dropTetro();
+        }, dropSpeed);
+    }
+});
