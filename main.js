@@ -259,7 +259,6 @@ function checkLine(){
     if(linec) {
         lines += linec;
         score += 100 * (2**(linec-1));
-        
         // スコアと消したライン数を表示
         document.getElementById("lines").innerHTML = lines;
         document.getElementById("socre").innerHTML = score;
