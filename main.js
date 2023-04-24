@@ -114,6 +114,13 @@ const colorRGB = {
 let field = [];
 let miniField = [];
 
+let tetro_t;
+let tetro;
+
+tetro_t = Math.floor(Math.random() * (TETRO_PATTERN.length-1))+1;
+tetro = TETRO_PATTERN[tetro_t];
+
+
 function initializeField() {
     for (let y = 0; y < FILED_ROW; y++) {
         field[y] = [];
@@ -178,7 +185,18 @@ drawField();
 drawTetro();
 
 // 当たり判定を行う
-function checkMove() {
+function checkMove(mx, my) {
+    for(let y = 0; y < TETRO_SIZE; y++){
+        for(let x = 0; x < TETRO_SIZE; x++){
+            if(tetro[y][x]){
+                let nx = tetro_x + mx + x; // 2
+                let ny = tetro_y + my + y; // 0
+                if(ny < 0 || nx < 0
+                || ny >= FILED_ROW || nx >= FILED_COL
+                || field[ny][nx] ) return false;
+            }
+        }
+    }
     return true;
 }
 
@@ -196,7 +214,7 @@ function dropTetro() {
 function drawTetro() {
     for (let y = 0; y < TETRO_SIZE; y++) {
         for (let x = 0; x < TETRO_SIZE; x++) {
-            if (TETRO_PATTERN[0][y][x]) {
+            if (tetro[y][x]) {
                 drawBlock(tetro_x + x, tetro_y + y, "red", 0.2)
             }
         }
@@ -205,18 +223,18 @@ function drawTetro() {
     document.onkeydown = (e) => {
         switch(e.key) {
             case "ArrowLeft":
-                tetro_x--;
+                if(checkMove(-1, 0)) tetro_x--;
                 break;
             case "ArrowRight":
-                tetro_x++;
+                if(checkMove(1, 0)) tetro_x++;
                 break;
             case "ArrowDown":
-                tetro_y++;
+                if(checkMove(0, 1)) tetro_y++;
                 break;
             case "ArrowUp":
                 // let newTetoro = rotateTetro();
                 // if (checkMove()) TETRO_PATTERN[0] = newTetoro;
-                tetro_y--;
+                if(checkMove(0, -1)) tetro_y--;
                 break;
             default:
                 return;
