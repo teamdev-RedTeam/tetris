@@ -1,0 +1,45 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.btn-oudo {
+    background-color: rgb(184, 154, 80)!important;
+}
+
+.title-border {
+    border: 5mm ridge rgb(255, 255, 255);
+}
+
+.title-text {
+    font-size: 7em;
+    font-weight: bold;
+    letter-spacing: 0.5rem;
+}
+
+.text-orange {
+    color: rgb(255, 119, 0);
+}
+
+.bg-oudo {
+    background-color: rgb(186, 154, 80);
+}
+
+.text-morado {
+    color: rgb(168, 86, 168);
+}
+
+.play-button {
+    background-color: rgb(184, 154, 80);
+    border: none;
+    /* color: white; */
+    padding: 10px 20px;
+    /* text-align: center; */
+    text-decoration: none;
+    display: inline-block;
+    font-size: 15px;
+    cursor: pointer;
+  }
+
+  .pause-button:hover {
+    opacity: 0.7;
+  }
