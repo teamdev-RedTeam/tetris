@@ -171,6 +171,7 @@ function drawField() {
             else drawBlock(ctx, x, y, field[y][x], 0.5, 8);
         }
     }
+    drawPredictedLandingPoint();
 }
 
 // ミニフィールドを初期化する
@@ -196,10 +197,11 @@ function drawMiniField() {
 }
 
 // 当たり判定を行う
-function checkMove(mx, my) {
+function checkMove(mx, my, newTetro) {
+    if(newTetro == undefined) newTetro = tetro;
     for(let y = 0; y < TETRO_SIZE; y++){
         for(let x = 0; x < TETRO_SIZE; x++){
-            if(tetro[y][x]){
+            if(newTetro[y][x]){
                 let nx = tetro_x + mx + x; // 2
                 let ny = tetro_y + my + y; // 0
                 if(ny < 1 || nx < 1
@@ -302,6 +304,28 @@ function drawTetroMini() {
     }
 }
 
+// drawBlockの最後の引数でopacityを調整したい。
+function drawPredictedLandingPoint()
+{
+    let dummyTetro = tetro;
+    let dummyMovementX = 0;
+    let dummyMovementY = 0;
+    while(checkMove(dummyMovementX, dummyMovementY + 1, dummyTetro)){
+        dummyMovementY++;
+    }
+
+    for(let y = 0; y < TETRO_SIZE; y++)
+    {
+        for(let x = 0; x < TETRO_SIZE; x++)
+        {
+            if(tetro[y][x])
+            {
+                drawBlock(ctx, tetro_x + dummyMovementX + x, tetro_y + dummyMovementY + y, tetroType, 0.1)
+            }
+        }
+    }
+}
+
 function switchPages(page1, page2) {
     displayNone(page1);
     displayBlock(page2);
@@ -320,8 +344,7 @@ function switchPages(page1, page2) {
             break;
         case "ArrowUp":
             let newTetoro = rotateTetro();
-            if (checkMove()) tetro = newTetoro;
-            if(checkMove(0, -1)) tetro_y--;
+            if(checkMove(0, 0, newTetoro)) tetro = newTetoro;
             break;
         default:
             return;
