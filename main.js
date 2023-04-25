@@ -52,6 +52,11 @@ let id;
 let dropSpeed = 600;
 let gameOver = false;
 
+const MUSIC = new Audio("sounds/tetris-remix.mp3");
+const ROTATE_SOUND = new Audio("sounds/rotateSound.mp3");
+const STACK_SOUND = new Audio("sounds/stackSound.mp3");
+const DELETE_SOUND = new Audio("sounds/deleteSound.mp3");
+
 const TETRO_COLORS = [
     [102, 204, 255],    //0水色
     [255, 153, 34],     //1オレンジ
@@ -219,6 +224,8 @@ function checkMove(mx, my, newTetro) {
             }
         }
     }
+    ROTATE_SOUND.currentTime = 0;
+    ROTATE_SOUND.play();
     return true;
 }
 
@@ -255,6 +262,8 @@ function checkLine(){
             for(let ny = y; ny > 1; ny--) {
                 for(let nx = 1; nx < FIELD_COL-1; nx++) {
                     field[ny][nx] = field[ny-1][nx];
+                    DELETE_SOUND.currentTime = 0;
+                    DELETE_SOUND.play();
                 }
             }
         }
@@ -275,6 +284,8 @@ function fixTetro() {
     for (let y = 0; y < TETRO_SIZE; y++) {
         for (let x = 0; x < TETRO_SIZE; x++) {
             if (tetro[y][x]) field[tetro_y + y][tetro_x + x] = tetroType;
+            STACK_SOUND.currentTime = 0;
+            STACK_SOUND.play();
         }
     }    
 }
@@ -427,6 +438,8 @@ function resetGame() {
 document.getElementById("startBtn").addEventListener("click", () => {
     switchPages(config.initialPage, config.mainPage);
     initGame();
+    MUSIC.currentTime = 0;
+    MUSIC.play();
 });
 
 //　リセットボタン
@@ -450,11 +463,13 @@ document.getElementById("pauseBtn").addEventListener("click", () => {
     if (btn.innerHTML == paused) {
         btn.innerHTML = restart;
         clearInterval(id);
+        MUSIC.pause();
     } else {
         btn.innerHTML = paused;
         id = setInterval(() => {
             dropTetro();
         }, dropSpeed);
+        MUSIC.play();
     }
 });
 
