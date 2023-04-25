@@ -292,8 +292,6 @@ function dropTetro() {
     if (checkGameOver()) {
         clearInterval(id);
         displayGameOverModal();
-        // alert("GAME OVER!!");
-        // return;
     }
     
     drawField();
@@ -339,10 +337,10 @@ function displayGameOverModal() {
     modal.style.display = "block";
   }
   
-//   function hideGameOverModal() {
-//     let modal = document.getElementById("game-over-modal");
-//     modal.style.display = "none";
-//   }
+function hideGameOverModal() {
+    let modal = document.getElementById("game-over-modal");
+    modal.style.display = "none";
+  }
 
  document.onkeydown = (e) => {
     switch(e.key) {
@@ -367,9 +365,7 @@ function displayGameOverModal() {
     drawTetro();
 }
 
-// スタートボタン
-document.getElementById("startBtn").addEventListener("click", function(){
-    switchPages(config.initialPage, config.mainPage);
+function initGame() {
     initializeField();
     drawField();
     drawTetro();
@@ -380,20 +376,47 @@ document.getElementById("startBtn").addEventListener("click", function(){
     id = setInterval(() => {
         dropTetro();
     }, dropSpeed);
+}
+
+// リセット
+function resetGame() {
+    initializeField();
+    drawField();
+    tetro = [];
+    tetroType = nextTetroType;
+    tetro = TETRO_PATTERN[tetroType];
+    nextTetroType = generateRandomInt();
+    nextTetro = TETRO_PATTERN[nextTetroType];
+
+    tetro_x = START_X;
+    tetro_y = START_Y;
+
+    initializeMiniField();
+    drawMiniField();
+    tetro_mini = [];
+    drawTetroMini();
+}
+
+// スタートボタン
+document.getElementById("startBtn").addEventListener("click", () => {
+    switchPages(config.initialPage, config.mainPage);
+    initGame();
 });
 
 //　リセットボタン
-document.getElementById("resetBtn").addEventListener("click", function(){
+document.getElementById("resetBtn").addEventListener("click", () => {
     let result = confirm("スタート画面に戻りますか？");
     
-    if (result) location.reload();
+    if (result) {
+        clearInterval(id);
+        resetGame();
+        initGame();
+    }
     else return;
-
-    clearInterval(id);
 });
 
 // 一時停止ボタン
-document.getElementById("pauseBtn").addEventListener("click", function(){
+document.getElementById("pauseBtn").addEventListener("click", () => {
     let btn = document.getElementById("pauseBtn");
     const paused = `<i class="fa-solid fa-pause fa-2x"></i>`;
     const restart = `<i class="fa-solid fa-play fa-2x"></i>`; 
@@ -407,4 +430,15 @@ document.getElementById("pauseBtn").addEventListener("click", function(){
             dropTetro();
         }, dropSpeed);
     }
+});
+
+// プレイヤーが続けるを選択したとき
+document.getElementById("play-again-button").addEventListener("click", () => {
+    hideGameOverModal();
+    initGame();
+});
+
+// プレイヤーがやめるを選択したとき
+document.getElementById("quit-button").addEventListener("click", () => {
+    location.reload();
 });
