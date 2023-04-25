@@ -145,7 +145,11 @@ function drawBlock(context, x, y, color, opacity, strokeColor = 9) {
     let px = x * BLOCK_SIZE;
     let py = y * BLOCK_SIZE;
 
-    context.fillStyle = `rgb(${TETRO_COLORS[color]})`;
+    let newopacity;
+    if(opacity == 0.2) newopacity = opacity;
+    else newopacity = 1;
+
+    context.fillStyle = `rgb(${TETRO_COLORS[color]}, ${newopacity})`;
     context.fillRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
     context.strokeStyle = `rgb(${TETRO_COLORS[strokeColor]}, ${opacity})`;
     context.strokeRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
@@ -334,7 +338,7 @@ function drawPredictedLandingPoint()
         {
             if(tetro[y][x])
             {
-                drawBlock(ctx, tetro_x + dummyMovementX + x, tetro_y + dummyMovementY + y, tetroType, 0.1)
+                drawBlock(ctx, tetro_x + dummyMovementX + x, tetro_y + dummyMovementY + y, tetroType, 0.2)
             }
         }
     }
