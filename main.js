@@ -128,10 +128,10 @@ const TETRO_PATTERN = [
     ]
 ];
 
-const MIN = 0;
-const MAX = TETRO_PATTERN.length - 1;
-
 function generateRandomInt() {
+    const MIN = 0;
+    const MAX = TETRO_PATTERN.length - 1;
+
     return Math.floor( Math.random() * (MAX + 1 - MIN) ) + MIN;
 }
 
@@ -368,16 +368,6 @@ function checkGameOver() {
     return false;
 }
 
-function resetData() {
-    let level = document.getElementById("level");
-    let line = document.getElementById("lines");
-    let score = document.getElementById("score");
-
-    level.innerHTML = "0000";
-    line.innerHTML = "0000";
-    score.innerHTML = "0000";
-}
-
 function switchPages(page1, page2) {
     displayNone(page1);
     displayBlock(page2);
@@ -445,6 +435,16 @@ function resetGame() {
     resetData();
 }
 
+function resetData() {
+    let level = document.getElementById("level");
+    let line = document.getElementById("lines");
+    let score = document.getElementById("score");
+
+    level.innerHTML = "0000";
+    line.innerHTML = "0000";
+    score.innerHTML = "0000";
+}
+
 // スタートボタン
 document.getElementById("startBtn").addEventListener("click", () => {
     switchPages(config.initialPage, config.mainPage);
@@ -494,5 +494,8 @@ document.getElementById("play-again-button").addEventListener("click", () => {
 
 // プレイヤーがやめるを選択したとき
 document.getElementById("quit-button").addEventListener("click", () => {
-    location.reload();
+    hideGameOverModal();
+    switchPages(config.mainPage, config.initialPage);
+    resetGame();
+    resetData();
 });
