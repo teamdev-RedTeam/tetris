@@ -50,6 +50,11 @@ let tetro_y = START_Y;
 let id;
 let gameOver = false;
 
+const MUSIC = new Audio("sounds/tetris-remix.mp3");
+const ROTATE_SOUND = new Audio("sounds/rotateSound.mp3");
+const STACK_SOUND = new Audio("sounds/stackSound.mp3");
+const DELETE_SOUND = new Audio("sounds/deleteSound.mp3");
+
 const TETRO_COLORS = [
     [102, 204, 255],    //0水色
     [255, 153, 34],     //1オレンジ
@@ -146,7 +151,7 @@ function drawBlock(context, x, y, color, opacity, strokeColor = 9) {
     let py = y * BLOCK_SIZE;
 
     let newopacity;
-    if(opacity == 0.2) newopacity = opacity;
+    if(opacity == 0.4) newopacity = opacity;
     else newopacity = 1;
 
     context.fillStyle = `rgb(${TETRO_COLORS[color]}, ${newopacity})`;
@@ -219,6 +224,8 @@ function checkMove(mx, my, newTetro) {
             }
         }
     }
+    ROTATE_SOUND.currentTime = 0;
+    ROTATE_SOUND.play();
     return true;
 }
 
@@ -255,6 +262,8 @@ function checkLine(){
             for(let ny = y; ny > 1; ny--) {
                 for(let nx = 1; nx < FIELD_COL-1; nx++) {
                     field[ny][nx] = field[ny-1][nx];
+                    DELETE_SOUND.currentTime = 0;
+                    DELETE_SOUND.play();
                 }
             }
         }
@@ -282,6 +291,8 @@ function fixTetro() {
     for (let y = 0; y < TETRO_SIZE; y++) {
         for (let x = 0; x < TETRO_SIZE; x++) {
             if (tetro[y][x]) field[tetro_y + y][tetro_x + x] = tetroType;
+            STACK_SOUND.currentTime = 0;
+            STACK_SOUND.play();
         }
     }    
 }
@@ -303,6 +314,14 @@ function dropTetro() {
     if (checkGameOver()) {
         clearInterval(id);
         displayGameOverModal();
+
+        let highScoreSec = document.getElementById("highScore");
+        let highScore = parseInt(highScoreSec.getAttribute("data-score"), 10);
+
+        if (highScore < score) {
+            highScoreSec.setAttribute("data-score", score.toString());
+            highScoreSec.innerHTML = `High Score : ${score}`;
+        }
     }
     
     drawField();
@@ -343,21 +362,27 @@ function drawPredictedLandingPoint()
     {
         for(let x = 0; x < TETRO_SIZE; x++)
         {
-            if(tetro[y][x])
-            {
-                drawBlock(ctx, tetro_x + dummyMovementX + x, tetro_y + dummyMovementY + y, tetroType, 0.2)
-            }
+            if(tetro[y][x]) drawBlock(ctx, tetro_x + dummyMovementX + x, tetro_y + dummyMovementY + y, tetroType, 0.4)
         }
     }
 }
 
-// 上のラインに触れているかをチェックする
 function checkGameOver() {
     let y = 1;
     for (let x = 1; x < FIELD_COL - 1; x++) {
         if (field[y][x] != 9) return true;
     }
     return false;
+}
+
+function resetData() {
+    let level = document.getElementById("level");
+    let line = document.getElementById("lines");
+    let score = document.getElementById("score");
+
+    level.innerHTML = "0000";
+    line.innerHTML = "0000";
+    score.innerHTML = "0000";
 }
 
 function switchPages(page1, page2) {
@@ -413,9 +438,6 @@ function initGame() {
 
 // リセット
 function resetGame() {
-    initializeField();
-    drawField();
-    tetro = [];
     tetroType = nextTetroType;
     tetro = TETRO_PATTERN[tetroType];
     nextTetroType = generateRandomInt();
@@ -424,21 +446,23 @@ function resetGame() {
     tetro_x = START_X;
     tetro_y = START_Y;
 
-    initializeMiniField();
-    drawMiniField();
-    tetro_mini = [];
-    drawTetroMini();
+    score = 0;
+    lines = 0;
+
+    resetData();
 }
 
 // スタートボタン
 document.getElementById("startBtn").addEventListener("click", () => {
     switchPages(config.initialPage, config.mainPage);
     initGame();
+    MUSIC.currentTime = 0;
+    MUSIC.play();
 });
 
 //　リセットボタン
 document.getElementById("resetBtn").addEventListener("click", () => {
-    let result = confirm("スタート画面に戻りますか？");
+    let result = confirm("Start New Game?");
     
     if (result) {
         clearInterval(id);
@@ -457,18 +481,22 @@ document.getElementById("pauseBtn").addEventListener("click", () => {
     if (btn.innerHTML == paused) {
         btn.innerHTML = restart;
         clearInterval(id);
+        MUSIC.pause();
     } else {
         btn.innerHTML = paused;
         id = setInterval(() => {
             dropTetro();
         }, 1000-(level-1)*DROP_SPEED_INTERVAL);
+        MUSIC.play();
     }
 });
 
 // プレイヤーが続けるを選択したとき
 document.getElementById("play-again-button").addEventListener("click", () => {
     hideGameOverModal();
+    resetGame();
     initGame();
+    resetData();
 });
 
 // プレイヤーがやめるを選択したとき
