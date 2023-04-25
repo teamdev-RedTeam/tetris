@@ -41,15 +41,15 @@
                     <div class="col-5 bg-oudo d-flex flex-column p-2">
                         <div class="d-flex justify-content-between">
                             <h5>LEVEL:</h5>
-                            <h5>0000</h5>
+                            <h5 id="level">0000</h5>
                         </div>
                         <div class="col-12 d-flex justify-content-between">
                             <h5>LINES:</h5>
-                            <h5>0000</h5>
+                            <h5 id="lines">0000</h5>
                         </div>
                         <div class="col-12 d-flex justify-content-between">
                             <h5>SCORE:</h5>
-                            <h5>0000</h5>
+                            <h5 id="score">0000</h5>
                         </div>
                     </div>
                     <canvas id="miniCanvas" width="120px"></canvas>
@@ -64,6 +64,15 @@
                 </div>
                 <div>
                     <canvas id="canvas"></canvas>
+                </div>
+                <div id="game-over-modal" class="modal">
+                    <div class="modal-content" class="p-5">
+                        <h1 class="col-12 pb-3">GAME OVER</h1>
+                        <div class="col-12 d-flex flex-row justify-content-around">
+                            <button id="quit-button" class="quit-button col-6">Quit</button>
+                            <button id="play-again-button" class="play-again-button col-6">Play Again</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
