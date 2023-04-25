@@ -48,8 +48,6 @@ let tetro_x = START_X;
 let tetro_y = START_Y;
 
 let id;
-// レベルが上がるごとに速くする
-let dropSpeed = 600;
 let gameOver = false;
 
 const MUSIC = new Audio("sounds/tetris-remix.mp3");
@@ -70,10 +68,12 @@ const TETRO_COLORS = [
     [0, 0, 0],          //9黒
 ];
 
-// 消したライン数
+// スコア・レベル
+const DROP_SPEED_INTERVAL = 100; //レベルアップするごとにアップする速度[msec]
+const MAX_LEVEL = 10;
 let lines = 0;
-// スコア
 let score = 0;
+let level = 1;
 
 // 7種類のテトロミノ
 const TETRO_PATTERN = [
@@ -272,8 +272,15 @@ function checkLine(){
     // スコア用の処理
     if(linec) {
         lines += linec;
-        score += 100 * (2**(linec-1));
-        // スコアと消したライン数を表示
+        score += level * 10 * linec ** 2;
+        if(level <= MAX_LEVEL) {
+            for(i=level; i<=MAX_LEVEL; i++) {
+                if(score >= (level+1)**3 * 4) {
+                    level += 1;
+                }
+            }
+        }
+        document.getElementById("level").innerHTML = level;
         document.getElementById("lines").innerHTML = lines;
         document.getElementById("score").innerHTML = score;
     }
@@ -416,7 +423,7 @@ function initGame() {
 
     id = setInterval(() => {
         dropTetro();
-    }, dropSpeed);
+    }, 1000-(level-1)*DROP_SPEED_INTERVAL);
 }
 
 // リセット
@@ -479,7 +486,7 @@ document.getElementById("pauseBtn").addEventListener("click", () => {
         btn.innerHTML = paused;
         id = setInterval(() => {
             dropTetro();
-        }, dropSpeed);
+        }, 1000-(level-1)*DROP_SPEED_INTERVAL);
         MUSIC.play();
     }
 });
