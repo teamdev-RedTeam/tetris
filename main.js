@@ -506,3 +506,18 @@ document.getElementById("quit-button").addEventListener("click", () => {
     resetGame();
     resetData();
 });
+
+// 操作方法の表示・非表示
+const modal = document.getElementById("infoModal");
+
+document.getElementById("infoBtn").addEventListener("click", () => {
+    displayBlock(modal);
+});
+
+document.querySelectorAll(".close")[0].addEventListener("click", () => {
+    displayNone(modal);
+});
+
+window.onclick = (event) => {
+    if (event.target == modal) displayNone(modal);
+}
