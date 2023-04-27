@@ -162,15 +162,15 @@ function generateRandomInt() {
 let tetroType = generateRandomInt();
 let tetro = TETRO_PATTERN[tetroType];
 
-//　1
+//　ネクスト1
 let nextTetroType_1 = generateRandomInt();
 let nextTetro_1 = TETRO_PATTERN[nextTetroType_1];
 
-// 2
+// ネクスト2
 let nextTetroType_2 = generateRandomInt();
 let nextTetro_2 = TETRO_PATTERN[nextTetroType_2];
 
-// 3
+// ネクスト3
 let nextTetroType_3 = generateRandomInt();
 let nextTetro_3 = TETRO_PATTERN[nextTetroType_3];
 
@@ -384,9 +384,6 @@ function dropTetro() {
         checkLine();
 
         setNextTetro();
-
-        tetro_x = START_X;
-        tetro_y = START_Y;
     }
 
     if (checkGameOver()) {
@@ -506,9 +503,6 @@ function musicStop(){
 function resetGame() {
     setNextTetro();
 
-    tetro_x = START_X;
-    tetro_y = START_Y;
-
     score = 0;
     lines = 0;
     level = 1;
@@ -536,6 +530,9 @@ function setNextTetro() {
     nextTetro_1 = TETRO_PATTERN[nextTetroType_1];
     nextTetro_2 = TETRO_PATTERN[nextTetroType_2];
     nextTetro_3 = TETRO_PATTERN[nextTetroType_3];
+
+    tetro_x = START_X;
+    tetro_y = START_Y;
 }
 
 function musicPlay(){
@@ -586,17 +583,17 @@ document.getElementById("pauseBtn").addEventListener("click", () => {
 // プレイヤーが続けるを選択したとき
 document.getElementById("play-again-button").addEventListener("click", () => {
     hideGameOverModal();
+    resetData();
     resetGame();
     initGame();
-    resetData();
 });
 
 // プレイヤーがやめるを選択したとき
 document.getElementById("quit-button").addEventListener("click", () => {
     hideGameOverModal();
-    switchPages(config.mainPage, config.initialPage);
     resetGame();
     resetData();
+    switchPages(config.mainPage, config.initialPage);
 });
 
 // 操作方法の表示・非表示
