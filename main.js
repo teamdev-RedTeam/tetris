@@ -50,10 +50,21 @@ let tetro_y = START_Y;
 let id;
 let gameOver = false;
 
-const MUSIC = new Audio("sounds/tetris-remix.mp3");
-const ROTATE_SOUND = new Audio("sounds/rotateSound.mp3");
-const STACK_SOUND = new Audio("sounds/stackSound.mp3");
-const DELETE_SOUND = new Audio("sounds/deleteSound.mp3");
+const MUSIC = new Audio("sounds/bonkers-for-arcades.mp3");
+const STACK_SOUND = new Audio("sounds/zapsplat_bambo_swoosh.mp3");
+const DELETE_SOUND = new Audio("sounds/retro-chip-power.mp3");
+const GAMEOVER_SOUND = new Audio("sounds/power-down-13.mp3");
+
+let elem_volume = document.getElementById("volume");
+let elem_range = document.getElementById("vol_range");
+
+const volumeSlider = document.getElementById('volumeSlider');
+volumeSlider.addEventListener('input', function() {
+    MUSIC.volume = this.value;
+    STACK_SOUND.volume = this.value;
+    DELETE_SOUND.volume = this.value;
+}, false);
+
 
 const TETRO_COLORS = [
     [102, 204, 255],    //0水色
@@ -224,8 +235,6 @@ function checkMove(mx, my, newTetro) {
             }
         }
     }
-    ROTATE_SOUND.currentTime = 0;
-    ROTATE_SOUND.play();
     return true;
 }
 
@@ -291,8 +300,6 @@ function fixTetro() {
     for (let y = 0; y < TETRO_SIZE; y++) {
         for (let x = 0; x < TETRO_SIZE; x++) {
             if (tetro[y][x]) field[tetro_y + y][tetro_x + x] = tetroType;
-            STACK_SOUND.currentTime = 0;
-            STACK_SOUND.play();
         }
     }    
 }
@@ -314,6 +321,9 @@ function dropTetro() {
     if (checkGameOver()) {
         clearInterval(id);
         displayGameOverModal();
+        musicStop();
+        MUSIC.currentTime = 0;
+        GAMEOVER_SOUND.play();
 
         let highScoreSec = document.getElementById("highScore");
         let highScore = parseInt(highScoreSec.getAttribute("data-score"), 10);
@@ -399,6 +409,7 @@ function hideGameOverModal() {
             if(checkMove(1, 0)) tetro_x++;
             break;
         case "ArrowDown":
+            STACK_SOUND.play();
             while(checkMove(0, 1)) tetro_y++;
             break;
         case "ArrowUp":
@@ -420,10 +431,17 @@ function initGame() {
     initializeMiniField();
     drawMiniField();
     drawTetroMini();
+    MUSIC.currentTime = 0;
+    musicPlay();
 
     id = setInterval(() => {
         dropTetro();
     }, 1000-(level-1)*DROP_SPEED_INTERVAL);
+}
+
+function musicStop(){
+    MUSIC.pause();
+    DELETE_SOUND.pause();
 }
 
 // リセット
@@ -453,12 +471,18 @@ function resetData() {
     score.innerHTML = "0";
 }
 
+function musicPlay(){
+    MUSIC.addEventListener('ended', function() {
+        this.currentTime = 0;
+        this.play();
+    }, false);
+    MUSIC.play();
+}
+
 // スタートボタン
 document.getElementById("startBtn").addEventListener("click", () => {
     switchPages(config.initialPage, config.mainPage);
     initGame();
-    MUSIC.currentTime = 0;
-    MUSIC.play();
 });
 
 //　リセットボタン
