@@ -438,6 +438,7 @@ function resetGame() {
 
     score = 0;
     lines = 0;
+    level = 1;
 
     resetData();
 }
@@ -447,9 +448,9 @@ function resetData() {
     let line = document.getElementById("lines");
     let score = document.getElementById("score");
 
-    level.innerHTML = "0000";
-    line.innerHTML = "0000";
-    score.innerHTML = "0000";
+    level.innerHTML = "1";
+    line.innerHTML = "0";
+    score.innerHTML = "0";
 }
 
 // スタートボタン

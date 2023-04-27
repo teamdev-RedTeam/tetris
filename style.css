@@ -92,7 +92,7 @@ body {
 }
 
 .info-modal {
-  background-color: rgb(0, 0, 0, .9);
+  background-color: rgb(0, 0, 0);
 }
 
 .info-modal-content {
