@@ -30,6 +30,41 @@
                         <button id="startBtn" class="btn btn-outline-warning btn-lg col-12">START</button>
                     </div>
                 </div>
+                <div class="col-12 d-flex justify-content-center p-2">
+                    <span id="infoBtn" class="info-button"><i class="fas fa-info-circle fa-2x" style="color: white"></i></span>
+                </div>
+                <div id="infoModal" class="modal info-modal">
+                    <div class="info-modal-content text-dark d-flex flex-column justify-content-center">
+                        <h3 class="pb-2"><strong>HOW TO PLAY</strong></h3>
+                        <table class="table">
+                            <thead>
+                                <tr class="table-warning">
+                                  <th scope="col">キー</th>
+                                  <th scope="col">動作</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  <th scope="row">←</th>
+                                  <td>左移動</td>
+                                </tr>
+                                <tr>
+                                  <th scope="row">→</th>
+                                  <td>右移動</td>
+                                </tr>
+                                <tr>
+                                  <th scope="row">↑</th>
+                                  <td colspan="2">回転</td>
+                                </tr>
+                                <tr>
+                                  <th scope="row">↓</th>
+                                  <td colspan="2">ハードドロップ</td>
+                                </tr>
+                              </tbody>
+                        </table>
+                        <span class="close">&times;</span>
+                    </div>
+                  </div>
             </div>
         </div>
     </div>
@@ -41,15 +76,15 @@
                     <div class="col-5 bg-oudo d-flex flex-column p-2">
                         <div class="d-flex justify-content-between">
                             <h5>LEVEL:</h5>
-                            <h5 id="level">0000</h5>
+                            <h5 id="level">1</h5>
                         </div>
                         <div class="col-12 d-flex justify-content-between">
                             <h5>LINES:</h5>
-                            <h5 id="lines">0000</h5>
+                            <h5 id="lines">0</h5>
                         </div>
                         <div class="col-12 d-flex justify-content-between">
                             <h5>SCORE:</h5>
-                            <h5 id="socre">0000</h5>
+                            <h5 id="score">0</h5>
                         </div>
                     </div>
                     <canvas id="miniCanvas" width="120px"></canvas>
@@ -64,6 +99,18 @@
                 </div>
                 <div>
                     <canvas id="canvas"></canvas>
+                </div>
+                <div class="col-12 d-flex justify-content-center p-3">
+                    <h3 id="highScore" class="text-white" data-score="0">High Score : 0000</h3>
+                </div>
+                <div id="game-over-modal" class="modal">
+                    <div class="gm-modal-content" class="p-5">
+                        <h1 class="col-12 pb-3">GAME OVER</h1>
+                        <div class="col-12 d-flex flex-row justify-content-around">
+                            <button id="quit-button" class="quit-button col-6">Quit</button>
+                            <button id="play-again-button" class="play-again-button col-6">Play Again</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
