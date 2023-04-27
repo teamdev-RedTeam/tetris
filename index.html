@@ -60,6 +60,10 @@
                                   <th scope="row">↓</th>
                                   <td colspan="2">ハードドロップ</td>
                                 </tr>
+                                <tr>
+                                  <th scope="row">space</th>
+                                  <td colspan="2">ホールド</td>
+                                </tr>
                               </tbody>
                         </table>
                         <span class="close">&times;</span>
@@ -71,8 +75,8 @@
     <!-- メイン画面 -->
     <div id="mainPage" class="d-none">
         <div class="vh-100 bg-dark d-flex justify-content-center align-items-center">
-            <div class="d-flex flex-column justify-content-center">
-                <div class="d-flex flex-row justify-content-between pb-2" style="height: 120px;">
+            <div class="d-flex flex-column justify-content-start">
+                <div class="d-flex flex-row justify-content-between pb-2" style="height: 120px; width: 360px;">
                     <div class="col-5 bg-oudo d-flex flex-column p-2">
                         <div class="d-flex justify-content-between">
                             <h5>LEVEL:</h5>
@@ -87,8 +91,11 @@
                             <h5 id="score">0</h5>
                         </div>
                     </div>
-                    <canvas id="miniCanvas" width="120px"></canvas>
-                    <div class="col-2 d-flex flex-column justify-content-around align-items-center">
+                    <div class="col-4 bg-oudo d-flex flex-column justify-content-center p-2 text-center">
+                        <h4 class="text-primary"><strong>BEST SCORE</strong></h4>
+                        <h4 id="highScore" data-score="0">0</h4>
+                    </div>
+                    <div class="d-flex flex-column justify-content-around align-items-center">
                         <div class="pt-0">
                             <button id="resetBtn" class="btn btn-oudo"><i class="fa-solid fa-rotate-left fa-2x"></i></button>
                         </div>
@@ -97,11 +104,20 @@
                         </div>
                     </div>
                 </div>
-                <div>
-                    <canvas id="canvas"></canvas>
-                </div>
-                <div class="col-12 d-flex justify-content-center p-3">
-                    <h3 id="highScore" class="text-white" data-score="0">High Score : 0000</h3>
+                <div class="d-flex flex-row justify-content-center align-items-around">
+                    <div>
+                        <canvas id="canvas"></canvas>
+                    </div>
+                    <div class="d-flex flex-column">
+                        <div>
+                            <h3 class="text-white text-center">HOLD</h3>
+                            <canvas id="holdCanvas"></canvas>
+                        </div>
+                        <div>
+                            <h3 class="text-white text-center pt-2">NEXT</h3>
+                            <canvas id="nextCanvas"></canvas>
+                        </div>
+                    </div>
                 </div>
                 <div id="game-over-modal" class="modal">
                     <div class="gm-modal-content" class="p-5">

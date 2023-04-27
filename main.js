@@ -13,32 +13,44 @@ function displayBlock(ele) {
     ele.classList.add("d-block");
 }
 
+const BLOCK_SIZE = 30;
+const TETRO_SIZE = 4;
+
 // メインフィールド
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-// サブフィールド
-const miniCanvas = document.getElementById("miniCanvas");
-const miniCtx = miniCanvas.getContext("2d");
-
 const FIELD_COL = 12;
 const FIELD_ROW = 22;
-
-const MINI_F_COL = 4;
-const MINI_F_ROW = 4;
-
-const BLOCK_SIZE = 30;
-const TETRO_SIZE = 4;
 
 const SCREEN_W = FIELD_COL * BLOCK_SIZE; // 360px
 const SCREEN_H = FIELD_ROW * BLOCK_SIZE; // 660px
 canvas.width = SCREEN_W;
 canvas.height = SCREEN_H;
 
-const MINISCREEN_W = MINI_F_COL * BLOCK_SIZE; // 120px
-const MINISCREEN_H = MINI_F_ROW * BLOCK_SIZE; // 120px
-miniCanvas.width = MINISCREEN_W;
-miniCanvas.height = MINISCREEN_H;
+// ネクストフィールド
+const nextCanvas = document.getElementById("nextCanvas");
+const nextCtx = nextCanvas.getContext("2d");
+
+const NEXT_F_COL = 6;
+const NEXT_F_ROW = 12;
+
+const NEXTSCREEN_W = NEXT_F_COL * BLOCK_SIZE;
+const NEXTSCREEN_H = NEXT_F_ROW * BLOCK_SIZE;
+nextCanvas.width = NEXTSCREEN_W;
+nextCanvas.height = NEXTSCREEN_H;
+
+// ホールドフィールド
+const holdCanvas = document.getElementById("holdCanvas");
+const holdCtx = holdCanvas.getContext("2d");
+
+const HOLD_F_COL = 6;
+const HOLD_F_ROW = 4;
+
+const HOLDSCREEN_W = HOLD_F_COL * BLOCK_SIZE;
+const HOLDSCREEN_H = HOLD_F_ROW * BLOCK_SIZE;
+holdCanvas.width = HOLDSCREEN_W;
+holdCanvas.height = HOLDSCREEN_H;
 
 // 中央から出るようにするため
 const START_X = FIELD_COL / 2 - TETRO_SIZE / 2;
@@ -146,15 +158,25 @@ function generateRandomInt() {
     return Math.floor( Math.random() * (MAX + 1 - MIN) ) + MIN;
 }
 
+// 現在のテトロミノ
 let tetroType = generateRandomInt();
 let tetro = TETRO_PATTERN[tetroType];
 
-// 次のテトロミノ
-let nextTetroType = generateRandomInt();
-let nextTetro = TETRO_PATTERN[nextTetroType];
+//　1
+let nextTetroType_1 = generateRandomInt();
+let nextTetro_1 = TETRO_PATTERN[nextTetroType_1];
+
+// 2
+let nextTetroType_2 = generateRandomInt();
+let nextTetro_2 = TETRO_PATTERN[nextTetroType_2];
+
+// 3
+let nextTetroType_3 = generateRandomInt();
+let nextTetro_3 = TETRO_PATTERN[nextTetroType_3];
 
 let field = [];
-let miniField = [];
+let nextField = [];
+let holdField = [];
 
 // ワンブロックを描画する
 function drawBlock(context, x, y, color, opacity, strokeColor = 9) {
@@ -171,19 +193,28 @@ function drawBlock(context, x, y, color, opacity, strokeColor = 9) {
     context.strokeRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
 }
 
+function drawNextBlock(x, y, i, color) {
+    let px = x * BLOCK_SIZE + BLOCK_SIZE;
+    let py = (y * BLOCK_SIZE) + (i * 120);
+
+    nextCtx.fillStyle = `rgb(${TETRO_COLORS[color]})`;
+    nextCtx.fillRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
+    nextCtx.strokeStyle = `rgb(${TETRO_COLORS[9]}, .3)`;
+    nextCtx.strokeRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
+}
+
+// メインフィールド
 function initializeField() {
     for (let y = 0; y < FIELD_ROW; y++) {
         field[y] = [];
         for (let x = 0; x < FIELD_COL; x++) {
             if (y == 21 || x == 0 || x == 11) field[y][x] = 7;
             else if (y == 0 && (x >= 1 && x <= 10)) field[y][x] = 8;
-            // フィールド内
             else field[y][x] = 9;
         }
     }
 }
 
-// フィールド全体を描画する
 function drawField() {
     ctx.clearRect(0, 0, SCREEN_W, SCREEN_H);
 
@@ -197,24 +228,65 @@ function drawField() {
     drawPredictedLandingPoint();
 }
 
-// ミニフィールドを初期化する
-function initializeMiniField() {
-    for (let y = 0; y < MINI_F_ROW; y++) {
-        miniField[y] = [];
-        for (let x = 0; x < MINI_F_COL; x++) {
-            miniField[y][x] = 1;
+function drawTetro() {
+    for (let y = 0; y < TETRO_SIZE; y++) {
+        for (let x = 0; x < TETRO_SIZE; x++) {
+            if (tetro[y][x]) {
+                drawBlock(ctx, tetro_x + x, tetro_y + y, tetroType, 0.3);
+            }
         }
     }
 }
 
-function drawMiniField() {
-    miniCtx.clearRect(0, 0, MINISCREEN_W, MINISCREEN_H);
+// ネクストフィールド
+function initializeNextField() {
+    for (let y = 0; y < NEXT_F_ROW; y++) {
+        nextField[y] = [];
+        for (let x = 0; x < NEXT_F_COL; x++) {
+            nextField[y][x] = 1;
+        }
+    }
+}
 
-    for (let y = 0; y < MINI_F_ROW; y++) {
-        for (let x = 0; x < MINI_F_COL; x++) {
-            if (miniField[y][x] == 1) {
-                drawBlock(miniCtx, x, y, 7, 0.1);
+function drawNextField() {
+    nextCtx.clearRect(0, 0, NEXTSCREEN_W, NEXTSCREEN_H);
+
+    for (let y = 0; y < NEXT_F_ROW; y++) {
+        for (let x = 0; x < NEXT_F_COL; x++) {
+            if (nextField[y][x] == 1) drawBlock(nextCtx, x, y, 9, .1);
+        }
+    }
+}
+
+function drawTetroNext() {
+    let nextArr = [nextTetroType_1, nextTetroType_2, nextTetroType_3];
+
+    for (let i = 0; i < 3; i++) {
+        let tetroType = nextArr[i];
+        for (let y = 0; y < TETRO_SIZE; y++) {
+            for (let x = 0; x < TETRO_SIZE; x++) {
+                if (TETRO_PATTERN[tetroType][y][x]) drawNextBlock(x, y, i, tetroType, 0.3);
             }
+        }
+    }
+}
+
+// ホールドフィールド
+function initializeHoldField() {
+    for (let y = 0; y < HOLD_F_ROW; y++) {
+        holdField[y] = [];
+        for (let x = 0; x < HOLD_F_COL; x++) {
+            holdField[y][x] = 1;
+        }
+    }
+}
+
+function drawHoldField() {
+    holdCtx.clearRect(0, 0, HOLDSCREEN_W, HOLDSCREEN_H);
+
+    for (let y = 0; y < HOLD_F_ROW; y++) {
+        for (let x = 0; x < HOLD_F_COL; x++) {
+            if (holdField[y][x] == 1) drawBlock(holdCtx, x, y, 9, .1);
         }
     }
 }
@@ -310,10 +382,9 @@ function dropTetro() {
     else {
         fixTetro();
         checkLine();
-        tetroType = nextTetroType;
-        tetro = TETRO_PATTERN[tetroType];
-        nextTetroType = generateRandomInt();
-        nextTetro = TETRO_PATTERN[nextTetroType];
+
+        setNextTetro();
+
         tetro_x = START_X;
         tetro_y = START_Y;
     }
@@ -330,35 +401,17 @@ function dropTetro() {
 
         if (highScore < score) {
             highScoreSec.setAttribute("data-score", score.toString());
-            highScoreSec.innerHTML = `High Score : ${score}`;
+            highScoreSec.innerHTML = `${score}`;
         }
     }
     
     drawField();
     drawTetro();
-    drawMiniField();
-    drawTetroMini();
+    drawNextField();
+    drawTetroNext();
+    drawHoldField();
 }
 
-function drawTetro() {
-    for (let y = 0; y < TETRO_SIZE; y++) {
-        for (let x = 0; x < TETRO_SIZE; x++) {
-            if (tetro[y][x]) {
-                drawBlock(ctx, tetro_x + x, tetro_y + y, tetroType, 0.3);
-            }
-        }
-    }
-}
-
-function drawTetroMini() {
-    for (let y = 0; y < TETRO_SIZE; y++) {
-        for (let x = 0; x < TETRO_SIZE; x++) {
-            if (nextTetro[y][x]) drawBlock(miniCtx, x, y, nextTetroType, 0.3);
-        }
-    }
-}
-
-// drawBlockの最後の引数でopacityを調整したい。
 function drawPredictedLandingPoint()
 {
     let dummyTetro = tetro;
@@ -428,9 +481,14 @@ function initGame() {
     initializeField();
     drawField();
     drawTetro();
-    initializeMiniField();
-    drawMiniField();
-    drawTetroMini();
+    
+    initializeNextField();
+    drawNextField();
+    drawTetroNext();
+    
+    initializeHoldField();
+    drawHoldField();
+    
     MUSIC.currentTime = 0;
     musicPlay();
 
@@ -446,10 +504,7 @@ function musicStop(){
 
 // リセット
 function resetGame() {
-    tetroType = nextTetroType;
-    tetro = TETRO_PATTERN[tetroType];
-    nextTetroType = generateRandomInt();
-    nextTetro = TETRO_PATTERN[nextTetroType];
+    setNextTetro();
 
     tetro_x = START_X;
     tetro_y = START_Y;
@@ -469,6 +524,18 @@ function resetData() {
     level.innerHTML = "1";
     line.innerHTML = "0";
     score.innerHTML = "0";
+}
+
+function setNextTetro() {
+    tetroType = nextTetroType_1;
+    nextTetroType_1 = nextTetroType_2;
+    nextTetroType_2 = nextTetroType_3;
+    nextTetroType_3 = generateRandomInt();
+
+    tetro = TETRO_PATTERN[tetroType];
+    nextTetro_1 = TETRO_PATTERN[nextTetroType_1];
+    nextTetro_2 = TETRO_PATTERN[nextTetroType_2];
+    nextTetro_3 = TETRO_PATTERN[nextTetroType_3];
 }
 
 function musicPlay(){
