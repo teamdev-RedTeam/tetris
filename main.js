@@ -682,10 +682,6 @@ document.getElementById("infoBtn").addEventListener("click", () => {
     displayBlock(modal);
 });
 
-document.querySelectorAll(".close")[0].addEventListener("click", () => {
-    displayNone(modal);
-});
-
 window.onclick = (event) => {
     if (event.target == modal) displayNone(modal);
 }
