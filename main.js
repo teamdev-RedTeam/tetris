@@ -174,6 +174,10 @@ let nextTetro_2 = TETRO_PATTERN[nextTetroType_2];
 let nextTetroType_3 = generateRandomInt();
 let nextTetro_3 = TETRO_PATTERN[nextTetroType_3];
 
+//ホールド
+let holdTetroType;
+let holdTetro;
+
 let field = [];
 let nextField = [];
 let holdField = [];
@@ -197,20 +201,21 @@ function drawBlock(context, x, y, color, opacity, strokeColor = 9) {
     context.strokeRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
 }
 
-function drawNextBlock(x, y, i, color) {
+function drawNextHoldBlock(context, x, y, i, color) {
     let px = x * BLOCK_SIZE + BLOCK_SIZE;
     let py = (y * BLOCK_SIZE) + (i * 120);
 
-    nextCtx.fillStyle = `rgb(${TETRO_COLORS[color]})`;
-    nextCtx.fillRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
+    context.fillStyle = `rgb(${TETRO_COLORS[color]})`;
+    context.fillRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
 
     if (color < 7) {
-        decorateBlock(nextCtx, px, py, color);
+        decorateBlock(context, px, py, color);
     }
 
-    nextCtx.strokeStyle = `rgb(${TETRO_COLORS[9]}, .3)`;
-    nextCtx.strokeRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
+    context.strokeStyle = `rgb(${TETRO_COLORS[9]}, .3)`;
+    context.strokeRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
 }
+
 
 function decorateBlock(context, px, py, color) {
     // context.shadowColor = "black";
@@ -287,7 +292,7 @@ function drawTetroNext() {
         let tetroType = nextArr[i];
         for (let y = 0; y < TETRO_SIZE; y++) {
             for (let x = 0; x < TETRO_SIZE; x++) {
-                if (TETRO_PATTERN[tetroType][y][x]) drawNextBlock(x, y, i, tetroType, 0.3);
+                if (TETRO_PATTERN[tetroType][y][x]) drawNextHoldBlock(nextCtx, x, y, i, tetroType);
             }
         }
     }
@@ -309,6 +314,16 @@ function drawHoldField() {
     for (let y = 0; y < HOLD_F_ROW; y++) {
         for (let x = 0; x < HOLD_F_COL; x++) {
             if (holdField[y][x] == 1) drawBlock(holdCtx, x, y, 9, .1);
+        }
+    }
+}
+
+function drawTetroHold() {
+    for (let y = 0; y < TETRO_SIZE; y++) {
+        for (let x = 0; x < TETRO_SIZE; x++) {
+            if (holdTetro[y][x]) {
+                drawNextHoldBlock(holdCtx, x, y, 0, holdTetroType);
+            }
         }
     }
 }
@@ -392,6 +407,26 @@ function checkLine(){
     }
 }
 
+//ホールド機能
+function setHold() {
+    if(!holdTetro) {
+        holdTetroType = tetroType;
+        holdTetro = tetro;
+        // ゲームオーバー, 着地点スペース....
+        setNextTetro();
+    }
+    else {
+        // tetroType入れ替え
+        tmp = holdTetroType;
+        holdTetroType = tetroType;
+        tetroType = tmp;
+        // tetro入れ替え
+        tmp = holdTetro;
+        holdTetro = tetro;
+        tetro = tmp;
+    }
+}
+
 // それ以上下に行くことができないので固定する
 function fixTetro() {
     for (let y = 0; y < TETRO_SIZE; y++) {
@@ -432,6 +467,7 @@ function dropTetro() {
     drawNextField();
     drawTetroNext();
     drawHoldField();
+    drawTetroHold();
 }
 
 function drawPredictedLandingPoint()
@@ -502,7 +538,8 @@ function musicStop(){
 function resetGame() {
     setNextTetro();
     btn.innerHTML = paused;
-
+    holdTetro = null;
+    holdTetroType = null;
     score = 0;
     lines = 0;
     level = 1;
@@ -554,8 +591,13 @@ function keyDownFunc(e) {
             while(checkMove(0, 1)) tetro_y++;
             break;
         case "ArrowUp":
-            let newTetoro = rotateTetro();
+           let newTetoro = rotateTetro();
             if(checkMove(0, 0, newTetoro)) tetro = newTetoro;
+            break;
+        case "Shift":
+            setHold();
+            drawHoldField();
+            drawTetroHold();
             break;
         default:
             return;
