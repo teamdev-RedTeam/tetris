@@ -77,7 +77,6 @@ volumeSlider.addEventListener('input', function() {
     DELETE_SOUND.volume = this.value;
 }, false);
 
-
 const TETRO_COLORS = [
     [102, 204, 255],    //0水色
     [255, 153, 34],     //1オレンジ
@@ -88,7 +87,8 @@ const TETRO_COLORS = [
     [85, 187, 85],      //6緑
     [184, 154, 80],     //7黄土
     [125, 118, 119],    //8灰色
-    [0, 0, 0],          //9黒
+    [50, 50, 50],       //9黒
+    [255, 255, 255],    //10白
 ];
 
 // スコア・レベル
@@ -189,6 +189,10 @@ function drawBlock(context, x, y, color, opacity, strokeColor = 9) {
 
     context.fillStyle = `rgb(${TETRO_COLORS[color]}, ${newopacity})`;
     context.fillRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
+
+    if (color < 7 && newopacity == 1) {
+        decorateBlock(context, px, py, color);
+    }
     context.strokeStyle = `rgb(${TETRO_COLORS[strokeColor]}, ${opacity})`;
     context.strokeRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
 }
@@ -199,8 +203,26 @@ function drawNextBlock(x, y, i, color) {
 
     nextCtx.fillStyle = `rgb(${TETRO_COLORS[color]})`;
     nextCtx.fillRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
+
+    if (color < 7) {
+        decorateBlock(nextCtx, px, py, color);
+    }
+
     nextCtx.strokeStyle = `rgb(${TETRO_COLORS[9]}, .3)`;
     nextCtx.strokeRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
+}
+
+function decorateBlock(context, px, py, color) {
+    // context.shadowColor = "black";
+    // context.shadowOffsetY = 3;
+    // context.shadowOffsetX = 3;
+    // context.shadowBlur = 3;
+    context.fillStyle = `rgb(${TETRO_COLORS[10]})`;
+    context.fillRect(px, py, 4, 4);
+    context.fillStyle = `rgb(${TETRO_COLORS[10]})`;
+    context.fillRect(px + 4, py + 4, 8, 8);
+    context.fillStyle = `rgb(${TETRO_COLORS[color]})`;
+    context.fillRect(px + 8, py + 8, 4, 4);
 }
 
 // メインフィールド
@@ -358,6 +380,9 @@ function checkLine(){
             for(i=level; i<=MAX_LEVEL; i++) {
                 if(score >= (level+1)**3 * 4) {
                     level += 1;
+                    if (level % 2 == 0) {
+
+                    }
                 }
             }
         }
@@ -450,30 +475,6 @@ function hideGameOverModal() {
     modal.style.display = "none";
   }
 
- document.onkeydown = (e) => {
-    switch(e.key) {
-        case "ArrowLeft":
-            if(checkMove(-1, 0)) tetro_x--;
-            break;
-        case "ArrowRight":
-            if(checkMove(1, 0)) tetro_x++;
-            break;
-        case "ArrowDown":
-            STACK_SOUND.play();
-            while(checkMove(0, 1)) tetro_y++;
-            break;
-        case "ArrowUp":
-            let newTetoro = rotateTetro();
-            if(checkMove(0, 0, newTetoro)) tetro = newTetoro;
-            break;
-        default:
-            return;
-        }
-
-    drawField();
-    drawTetro();
-}
-
 function initGame() {
     initializeField();
     drawField();
@@ -489,9 +490,7 @@ function initGame() {
     MUSIC.currentTime = 0;
     musicPlay();
 
-    id = setInterval(() => {
-        dropTetro();
-    }, 1000-(level-1)*DROP_SPEED_INTERVAL);
+    id = startInterval();
 }
 
 function musicStop(){
@@ -502,12 +501,11 @@ function musicStop(){
 // リセット
 function resetGame() {
     setNextTetro();
+    btn.innerHTML = paused;
 
     score = 0;
     lines = 0;
     level = 1;
-
-    resetData();
 }
 
 function resetData() {
@@ -543,11 +541,39 @@ function musicPlay(){
     MUSIC.play();
 }
 
+function keyDownFunc(e) {
+    switch(e.key) {
+        case "ArrowLeft":
+            if(checkMove(-1, 0)) tetro_x--;
+            break;
+        case "ArrowRight":
+            if(checkMove(1, 0)) tetro_x++;
+            break;
+        case "ArrowDown":
+            STACK_SOUND.play();
+            while(checkMove(0, 1)) tetro_y++;
+            break;
+        case "ArrowUp":
+            let newTetoro = rotateTetro();
+            if(checkMove(0, 0, newTetoro)) tetro = newTetoro;
+            break;
+        default:
+            return;
+        }
+        
+    drawField();
+    drawTetro();
+}
+
 // スタートボタン
 document.getElementById("startBtn").addEventListener("click", () => {
     switchPages(config.initialPage, config.mainPage);
     initGame();
 });
+
+let btn = document.getElementById("pauseBtn");
+const paused = `<i class="fa-solid fa-pause fa-2x"></i>`;
+const restart = `<i class="fa-solid fa-play fa-2x"></i>`; 
 
 //　リセットボタン
 document.getElementById("resetBtn").addEventListener("click", () => {
@@ -556,29 +582,40 @@ document.getElementById("resetBtn").addEventListener("click", () => {
     if (result) {
         clearInterval(id);
         resetGame();
+        resetData();
         initGame();
     }
-    else return;
+    else {
+        btn.innerHTML = paused;
+        clearInterval(id);
+        id = startInterval();
+    };
 });
 
 // 一時停止ボタン
 document.getElementById("pauseBtn").addEventListener("click", () => {
-    let btn = document.getElementById("pauseBtn");
-    const paused = `<i class="fa-solid fa-pause fa-2x"></i>`;
-    const restart = `<i class="fa-solid fa-play fa-2x"></i>`; 
-
     if (btn.innerHTML == paused) {
         btn.innerHTML = restart;
         clearInterval(id);
         MUSIC.pause();
+        // キーを無効化する
+        document.onkeydown = null;
     } else {
         btn.innerHTML = paused;
-        id = setInterval(() => {
-            dropTetro();
-        }, 1000-(level-1)*DROP_SPEED_INTERVAL);
+        document.onkeydown = keyDownFunc;
+        id = startInterval();
         MUSIC.play();
     }
 });
+
+// セットインターバル
+function startInterval() {
+    let id = setInterval(() => {
+        dropTetro();
+    }, 1000-(level-1)*DROP_SPEED_INTERVAL);
+
+    return id;
+}
 
 // プレイヤーが続けるを選択したとき
 document.getElementById("play-again-button").addEventListener("click", () => {
@@ -610,3 +647,6 @@ document.querySelectorAll(".close")[0].addEventListener("click", () => {
 window.onclick = (event) => {
     if (event.target == modal) displayNone(modal);
 }
+
+// デフォルトのキーイベント
+document.onkeydown = keyDownFunc;
