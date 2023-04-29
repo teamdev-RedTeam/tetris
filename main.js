@@ -85,7 +85,7 @@ const TETRO_COLORS = [
     [255, 221, 34],     //4黄色
     [255, 68, 68],      //5赤
     [85, 187, 85],      //6緑
-    [184, 154, 80],     //7黄土
+    [190, 160, 90],     //7黄土
     [125, 118, 119],    //8灰色
     [50, 50, 50],       //9黒
     [255, 255, 255],    //10白
@@ -218,10 +218,6 @@ function drawNextHoldBlock(context, x, y, i, color) {
 
 
 function decorateBlock(context, px, py, color) {
-    // context.shadowColor = "black";
-    // context.shadowOffsetY = 3;
-    // context.shadowOffsetX = 3;
-    // context.shadowBlur = 3;
     context.fillStyle = `rgb(${TETRO_COLORS[10]})`;
     context.fillRect(px, py, 4, 4);
     context.fillStyle = `rgb(${TETRO_COLORS[10]})`;
@@ -391,13 +387,12 @@ function checkLine(){
     if(linec) {
         lines += linec;
         score += level * 10 * linec ** 2;
-        if(level <= MAX_LEVEL) {
+        if(level < MAX_LEVEL + 1) {
             for(i=level; i<=MAX_LEVEL; i++) {
                 if(score >= (level+1)**3 * 4) {
                     level += 1;
-                    if (level % 2 == 0) {
-
-                    }
+                    clearInterval(id);
+                    id = startInterval();
                 }
             }
         }
@@ -433,7 +428,7 @@ function fixTetro() {
         for (let x = 0; x < TETRO_SIZE; x++) {
             if (tetro[y][x]) field[tetro_y + y][tetro_x + x] = tetroType;
         }
-    }    
+    }
 }
 
 // 一定間隔ごとにテトロミノを落とす
@@ -466,8 +461,6 @@ function dropTetro() {
     drawTetro();
     drawNextField();
     drawTetroNext();
-    drawHoldField();
-    drawTetroHold();
 }
 
 function drawPredictedLandingPoint()
@@ -543,16 +536,10 @@ function resetGame() {
     score = 0;
     lines = 0;
     level = 1;
-}
 
-function resetData() {
-    let level = document.getElementById("level");
-    let line = document.getElementById("lines");
-    let score = document.getElementById("score");
-
-    level.innerHTML = "1";
-    line.innerHTML = "0";
-    score.innerHTML = "0";
+    document.getElementById("level").innerHTML = level.toString();
+    document.getElementById("lines").innerHTML = lines.toString();
+    document.getElementById("score").innerHTML = score.toString();
 }
 
 function setNextTetro() {
@@ -622,12 +609,13 @@ document.getElementById("resetBtn").addEventListener("click", () => {
     let result = confirm("Start New Game?");
     
     if (result) {
+        document.onkeydown = keyDownFunc;
         clearInterval(id);
         resetGame();
-        resetData();
         initGame();
     }
     else {
+        document.onkeydown = keyDownFunc;
         btn.innerHTML = paused;
         clearInterval(id);
         id = startInterval();
@@ -662,7 +650,7 @@ function startInterval() {
 // プレイヤーが続けるを選択したとき
 document.getElementById("play-again-button").addEventListener("click", () => {
     hideGameOverModal();
-    resetData();
+    // resetData();
     resetGame();
     initGame();
 });
@@ -670,8 +658,8 @@ document.getElementById("play-again-button").addEventListener("click", () => {
 // プレイヤーがやめるを選択したとき
 document.getElementById("quit-button").addEventListener("click", () => {
     hideGameOverModal();
+    // resetData();
     resetGame();
-    resetData();
     switchPages(config.mainPage, config.initialPage);
 });
 
