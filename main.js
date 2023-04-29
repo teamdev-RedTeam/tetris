@@ -62,10 +62,10 @@ let tetro_y = START_Y;
 let id;
 let gameOver = false;
 
-const MUSIC = new Audio("sounds/bonkers-for-arcades.mp3");
-const STACK_SOUND = new Audio("sounds/zapsplat_bambo_swoosh.mp3");
-const DELETE_SOUND = new Audio("sounds/retro-chip-power.mp3");
-const GAMEOVER_SOUND = new Audio("sounds/power-down-13.mp3");
+const MUSIC = new Audio("assets/sounds/bonkers-for-arcades.mp3");
+const STACK_SOUND = new Audio("assets/sounds/zapsplat_bambo_swoosh.mp3");
+const DELETE_SOUND = new Audio("assets/sounds/retro-chip-power.mp3");
+const GAMEOVER_SOUND = new Audio("assets/sounds/power-down-13.mp3");
 
 let elem_volume = document.getElementById("volume");
 let elem_range = document.getElementById("vol_range");
