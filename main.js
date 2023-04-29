@@ -412,7 +412,6 @@ function setHold() {
     if(!holdTetro) {
         holdTetroType = tetroType;
         holdTetro = tetro;
-        // ゲームオーバー, 着地点スペース....
         setNextTetro();
     }
     else {
