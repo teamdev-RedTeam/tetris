@@ -13,6 +13,22 @@ function displayBlock(ele) {
     ele.classList.add("d-block");
 }
 
+function switchPages(page1, page2) {
+    displayNone(page1);
+    displayBlock(page2);
+}
+
+// モーダル
+function displayGameOverModal() {
+    let modal = document.getElementById("game-over-modal");
+    modal.style.display = "block";
+  }
+  
+function hideGameOverModal() {
+    let modal = document.getElementById("game-over-modal");
+    modal.style.display = "none";
+  }
+
 const BLOCK_SIZE = 30;
 const TETRO_SIZE = 4;
 
@@ -59,23 +75,10 @@ const START_Y = 0;
 let tetro_x = START_X;
 let tetro_y = START_Y;
 
-let id;
-let gameOver = false;
-
 const MUSIC = new Audio("assets/sounds/bonkers-for-arcades.mp3");
 const STACK_SOUND = new Audio("assets/sounds/zapsplat_bambo_swoosh.mp3");
 const DELETE_SOUND = new Audio("assets/sounds/retro-chip-power.mp3");
 const GAMEOVER_SOUND = new Audio("assets/sounds/power-down-13.mp3");
-
-let elem_volume = document.getElementById("volume");
-let elem_range = document.getElementById("vol_range");
-
-const volumeSlider = document.getElementById('volumeSlider');
-volumeSlider.addEventListener('input', function() {
-    MUSIC.volume = this.value;
-    STACK_SOUND.volume = this.value;
-    DELETE_SOUND.volume = this.value;
-}, false);
 
 const TETRO_COLORS = [
     [102, 204, 255],    //0水色
@@ -90,13 +93,6 @@ const TETRO_COLORS = [
     [50, 50, 50],       //9黒
     [255, 255, 255],    //10白
 ];
-
-// スコア・レベル
-const DROP_SPEED_INTERVAL = 100; //レベルアップするごとにアップする速度[msec]
-const MAX_LEVEL = 10;
-let lines = 0;
-let score = 0;
-let level = 1;
 
 // 7種類のテトロミノ
 const TETRO_PATTERN = [
@@ -151,12 +147,16 @@ const TETRO_PATTERN = [
     ]
 ];
 
-function generateRandomInt() {
-    const MIN = 0;
-    const MAX = TETRO_PATTERN.length - 1;
+// スコア・レベル
+const DROP_SPEED_INTERVAL = 100; //レベルアップするごとにアップする速度[msec]
+const MAX_LEVEL = 10;
+let lines = 0;
+let score = 0;
+let level = 1;
 
-    return Math.floor( Math.random() * (MAX + 1 - MIN) ) + MIN;
-}
+// インターバルID
+let id;
+let gameOver = false;
 
 // 現在のテトロミノ
 let tetroType = generateRandomInt();
@@ -182,23 +182,27 @@ let field = [];
 let nextField = [];
 let holdField = [];
 
+function generateRandomInt() {
+    const MIN = 0;
+    const MAX = TETRO_PATTERN.length - 1;
+
+    return Math.floor( Math.random() * (MAX + 1 - MIN) ) + MIN;
+}
+
 // ワンブロックを描画する
 function drawBlock(context, x, y, color, opacity, strokeColor = 9) {
     let px = x * BLOCK_SIZE;
     let py = y * BLOCK_SIZE;
 
-    let newopacity;
-    if(opacity == 0.4) newopacity = opacity;
-    else newopacity = 1;
+    const predictedOpacity = 0.4;
+    let newopacity = opacity == predictedOpacity ? opacity : 1;
 
     context.fillStyle = `rgb(${TETRO_COLORS[color]}, ${newopacity})`;
     context.fillRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
-
-    if (color < 7 && newopacity == 1) {
-        decorateBlock(context, px, py, color);
-    }
     context.strokeStyle = `rgb(${TETRO_COLORS[strokeColor]}, ${opacity})`;
     context.strokeRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
+
+    if (color < TETRO_PATTERN.length && newopacity == 1) decorateBlock(context, px, py, color);
 }
 
 function drawNextHoldBlock(context, x, y, i, color) {
@@ -207,13 +211,10 @@ function drawNextHoldBlock(context, x, y, i, color) {
 
     context.fillStyle = `rgb(${TETRO_COLORS[color]})`;
     context.fillRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
-
-    if (color < 7) {
-        decorateBlock(context, px, py, color);
-    }
-
     context.strokeStyle = `rgb(${TETRO_COLORS[9]}, .3)`;
     context.strokeRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
+
+    if (color < TETRO_PATTERN.length) decorateBlock(context, px, py, color);
 }
 
 
@@ -243,9 +244,9 @@ function drawField() {
 
     for (let y = 0; y < FIELD_ROW; y++) {
         for (let x = 0; x < FIELD_COL; x++) {
-            if (field[y][x] == 7) drawBlock(ctx, x, y, 7, 0.7);
+            if (field[y][x] == 7) drawBlock(ctx, x, y, 7, .7);
             else if (field[y][x] == 8) drawBlock(ctx, x, y, 8, 0);
-            else drawBlock(ctx, x, y, field[y][x], 0.5, 8);
+            else drawBlock(ctx, x, y, field[y][x], .5, 8);
         }
     }
     drawPredictedLandingPoint();
@@ -276,7 +277,7 @@ function drawNextField() {
 
     for (let y = 0; y < NEXT_F_ROW; y++) {
         for (let x = 0; x < NEXT_F_COL; x++) {
-            if (nextField[y][x] == 1) drawBlock(nextCtx, x, y, 9, .1);
+            if (nextField[y][x]) drawBlock(nextCtx, x, y, 9, .1);
         }
     }
 }
@@ -309,7 +310,7 @@ function drawHoldField() {
 
     for (let y = 0; y < HOLD_F_ROW; y++) {
         for (let x = 0; x < HOLD_F_COL; x++) {
-            if (holdField[y][x] == 1) drawBlock(holdCtx, x, y, 9, .1);
+            if (holdField[y][x]) drawBlock(holdCtx, x, y, 9, .1);
         }
     }
 }
@@ -333,10 +334,8 @@ function checkMove(mx, my, newTetro) {
             if(newTetro[y][x]){
                 let nx = tetro_x + mx + x; // 2
                 let ny = tetro_y + my + y; // 0
-                if(ny < 1 || nx < 1
-                || ny >= FIELD_ROW - 1 || nx >= FIELD_COL - 1
-                || field[ny][nx] != 9)
-                return false;
+
+                if(field[ny][nx] != 9) return false;
             }
         }
     }
@@ -359,7 +358,7 @@ function rotateTetro() {
 //横にそろったら消す
 function checkLine(){
     // score用に消した行数をカウント
-    let linec = 0;
+    let banishedLine = 0;
     
     // フィールド外枠を除外
     for(let y = 1; y < FIELD_ROW-1; y++) {
@@ -371,7 +370,7 @@ function checkLine(){
             }
         }
         if (flag){
-            linec++;
+            banishedLine++;
 
             for(let ny = y; ny > 1; ny--) {
                 for(let nx = 1; nx < FIELD_COL-1; nx++) {
@@ -382,24 +381,31 @@ function checkLine(){
             }
         }
     }
-    
     // スコア用の処理
-    if(linec) {
-        lines += linec;
-        score += level * 10 * linec ** 2;
-        if(level < MAX_LEVEL + 1) {
-            for(i=level; i<=MAX_LEVEL; i++) {
-                if(score >= (level+1)**3 * 4) {
-                    level += 1;
-                    clearInterval(id);
-                    id = startInterval();
-                }
+    calcScore(banishedLine);
+    setData();
+}
+
+function calcScore(banishedLine) {
+    if (!banishedLine) return;
+
+    lines += banishedLine;
+    score += level * 10 * banishedLine ** 2;
+    if(level < MAX_LEVEL + 1) {
+        for(i=level; i<=MAX_LEVEL; i++) {
+            if(score >= (level+1)**3 * 4) {
+                level += 1;
+                clearInterval(id);
+                id = startInterval();
             }
         }
-        document.getElementById("level").innerHTML = level;
-        document.getElementById("lines").innerHTML = lines;
-        document.getElementById("score").innerHTML = score;
     }
+}
+
+function setData() {
+    document.getElementById("level").innerHTML = level.toString();
+    document.getElementById("lines").innerHTML = lines.toString();
+    document.getElementById("score").innerHTML = score.toString();
 }
 
 //ホールド機能
@@ -408,10 +414,9 @@ function setHold() {
         holdTetroType = tetroType;
         holdTetro = tetro;
         setNextTetro();
-    }
-    else {
+    } else {
         // tetroType入れ替え
-        tmp = holdTetroType;
+        let tmp = holdTetroType;
         holdTetroType = tetroType;
         tetroType = tmp;
         // tetro入れ替え
@@ -436,14 +441,16 @@ function dropTetro() {
     else {
         fixTetro();
         checkLine();
-
         setNextTetro();
+        drawNextField();
+        drawTetroNext();
     }
 
     if (checkGameOver()) {
         clearInterval(id);
         displayGameOverModal();
-        musicStop();
+        MUSIC.pause();
+        DELETE_SOUND.pause();
         MUSIC.currentTime = 0;
         GAMEOVER_SOUND.play();
 
@@ -452,30 +459,26 @@ function dropTetro() {
 
         if (highScore < score) {
             highScoreSec.setAttribute("data-score", score.toString());
-            highScoreSec.innerHTML = `${score}`;
+            highScoreSec.innerHTML = `${score.toString()}`;
         }
     }
     
     drawField();
     drawTetro();
-    drawNextField();
-    drawTetroNext();
 }
 
-function drawPredictedLandingPoint()
-{
+function drawPredictedLandingPoint() {
     let dummyTetro = tetro;
     let dummyMovementX = 0;
     let dummyMovementY = 0;
+
     while(checkMove(dummyMovementX, dummyMovementY + 1, dummyTetro)){
         dummyMovementY++;
     }
 
-    for(let y = 0; y < TETRO_SIZE; y++)
-    {
-        for(let x = 0; x < TETRO_SIZE; x++)
-        {
-            if(tetro[y][x]) drawBlock(ctx, tetro_x + dummyMovementX + x, tetro_y + dummyMovementY + y, tetroType, 0.4)
+    for(let y = 0; y < TETRO_SIZE; y++) {
+        for(let x = 0; x < TETRO_SIZE; x++) {
+            if(tetro[y][x]) drawBlock(ctx, tetro_x + dummyMovementX + x, tetro_y + dummyMovementY + y, tetroType, .4);
         }
     }
 }
@@ -487,21 +490,6 @@ function checkGameOver() {
     }
     return false;
 }
-
-function switchPages(page1, page2) {
-    displayNone(page1);
-    displayBlock(page2);
-}
-
-function displayGameOverModal() {
-    let modal = document.getElementById("game-over-modal");
-    modal.style.display = "block";
-  }
-  
-function hideGameOverModal() {
-    let modal = document.getElementById("game-over-modal");
-    modal.style.display = "none";
-  }
 
 function initGame() {
     initializeField();
@@ -521,11 +509,6 @@ function initGame() {
     id = startInterval();
 }
 
-function musicStop(){
-    MUSIC.pause();
-    DELETE_SOUND.pause();
-}
-
 // リセット
 function resetGame() {
     setNextTetro();
@@ -536,9 +519,7 @@ function resetGame() {
     lines = 0;
     level = 1;
 
-    document.getElementById("level").innerHTML = level.toString();
-    document.getElementById("lines").innerHTML = lines.toString();
-    document.getElementById("score").innerHTML = score.toString();
+    setData();
 }
 
 function setNextTetro() {
@@ -561,6 +542,7 @@ function musicPlay(){
         this.currentTime = 0;
         this.play();
     }, false);
+
     MUSIC.play();
 }
 
@@ -593,15 +575,23 @@ function keyDownFunc(e) {
     drawTetro();
 }
 
+// デフォルトのキーイベント
+document.onkeydown = keyDownFunc;
+
+// セットインターバル
+function startInterval() {
+    let id = setInterval(() => {
+        dropTetro();
+    }, 1000 - (level-1) * DROP_SPEED_INTERVAL);
+
+    return id;
+}
+
 // スタートボタン
 document.getElementById("startBtn").addEventListener("click", () => {
     switchPages(config.initialPage, config.mainPage);
     initGame();
 });
-
-let btn = document.getElementById("pauseBtn");
-const paused = `<i class="fa-solid fa-pause fa-2x"></i>`;
-const restart = `<i class="fa-solid fa-play fa-2x"></i>`; 
 
 //　リセットボタン
 document.getElementById("resetBtn").addEventListener("click", () => {
@@ -612,14 +602,17 @@ document.getElementById("resetBtn").addEventListener("click", () => {
         clearInterval(id);
         resetGame();
         initGame();
-    }
-    else {
+    } else {
         document.onkeydown = keyDownFunc;
         btn.innerHTML = paused;
         clearInterval(id);
         id = startInterval();
     };
 });
+
+let btn = document.getElementById("pauseBtn");
+const paused = `<i class="fa-solid fa-pause fa-2x"></i>`;
+const restart = `<i class="fa-solid fa-play fa-2x"></i>`; 
 
 // 一時停止ボタン
 document.getElementById("pauseBtn").addEventListener("click", () => {
@@ -637,19 +630,9 @@ document.getElementById("pauseBtn").addEventListener("click", () => {
     }
 });
 
-// セットインターバル
-function startInterval() {
-    let id = setInterval(() => {
-        dropTetro();
-    }, 1000-(level-1)*DROP_SPEED_INTERVAL);
-
-    return id;
-}
-
 // プレイヤーが続けるを選択したとき
 document.getElementById("play-again-button").addEventListener("click", () => {
     hideGameOverModal();
-    // resetData();
     resetGame();
     initGame();
 });
@@ -657,7 +640,6 @@ document.getElementById("play-again-button").addEventListener("click", () => {
 // プレイヤーがやめるを選択したとき
 document.getElementById("quit-button").addEventListener("click", () => {
     hideGameOverModal();
-    // resetData();
     resetGame();
     switchPages(config.mainPage, config.initialPage);
 });
@@ -673,5 +655,10 @@ window.onclick = (event) => {
     if (event.target == modal) displayNone(modal);
 }
 
-// デフォルトのキーイベント
-document.onkeydown = keyDownFunc;
+// 音量調節
+const volumeSlider = document.getElementById('volumeSlider');
+volumeSlider.addEventListener('input', function() {
+    MUSIC.volume = this.value;
+    STACK_SOUND.volume = this.value;
+    DELETE_SOUND.volume = this.value;
+}, false);
