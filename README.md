@@ -19,7 +19,7 @@ https://user-images.githubusercontent.com/107381511/235327257-5ace63bd-594d-42be
 - シフトキー: テトロミノを一時的に保持する
 
 ## Play
-プレイは[こちら]()をクリック
+プレイは[こちら](https://teamdev-redteam.github.io/work-space/)をクリック
 
 ## Credits
 - [Teradad41](https://github.com/Teradad41)
