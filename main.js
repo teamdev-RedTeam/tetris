@@ -414,7 +414,8 @@ function setHold() {
         holdTetroType = tetroType;
         holdTetro = tetro;
         setNextTetro();
-    } else {
+    } 
+    else if (checkMove(0, 0, holdTetro)) {
         // tetroType入れ替え
         let tmp = holdTetroType;
         holdTetroType = tetroType;
@@ -559,8 +560,8 @@ function keyDownFunc(e) {
             while(checkMove(0, 1)) tetro_y++;
             break;
         case "ArrowUp":
-           let newTetoro = rotateTetro();
-            if(checkMove(0, 0, newTetoro)) tetro = newTetoro;
+           let newTetro = rotateTetro();
+            if(checkMove(0, 0, newTetro)) tetro = newTetro;
             break;
         case "Shift":
             setHold();
